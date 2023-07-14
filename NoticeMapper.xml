@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.happyjob.study.community.dao.NoticeDao">
+
+	<!-- 공지사항 목록조회 -->
+	<select id="noticelist" resultType="kr.happyjob.study.community.model.NoticeModel">
+		select
+		tn.notice_no
+		, tn.notice_count
+		, tn.notice_title
+		, tn.reg_date
+		, ui.name as writer
+		from
+		tb_notice tn
+		join tb_userinfo ui
+		on tn.loginID = ui.loginID
+
+		<where>
+			<if test="(srctitle != null) and ( !''.equals(srctitle) )">
+				and tn.notice_title Like CONCAT('%', #{srctitle}, '%')
+			</if>
+			<if test="(srcsdate != null) and ( !''.equals(srcsdate) )">
+				and tn.reg_date <![CDATA[>=]]> #{srcsdate}
+			</if>
+			<if test="(srcedate != null) and ( !''.equals(srcedate) )">
+				and tn.reg_date <![CDATA[<=]]> #{srcedate}
+			</if>
+		</where>
+		order by
+		tn.notice_no desc
+	</select>
+	
+	<!-- 공지사항 등록 -->
+	<insert id="noticenewsave">
+		<selectKey resultType="int" keyProperty="noticeno" order="BEFORE">
+			select ifnull(max(notice_no), 0) + 1 from tb_notice
+		</selectKey>
+		insert into tb_notice
+			(
+				  notice_no
+				, loginID
+				, is_delete
+				, reg_date
+				, notice_content
+				, notice_title
+				, notice_count
+			) values (
+				  #{noticeno}
+				, #{loginId}
+				, 2
+				, #{notice_datefile}
+				, #{notice_detfile}
+				, #{notice_titlefile}
+				, 0
+			) 
+	</insert>
+</mapper>

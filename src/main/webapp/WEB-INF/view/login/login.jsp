@@ -5,6 +5,7 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+	<c:set var="cpath" value="${pageContext.request.contextPath}" />
 <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 <title>Chain Maker :: Login</title>
