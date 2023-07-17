@@ -73,7 +73,7 @@ public class ChatController {
     	logger.info("login ID===>"+userId);
     	
     	ChatUserDto userChatDto = new ChatUserDto();
-    	userChatDto.setUserId(userId);
+    	userChatDto.setName(userId);
     	
 //    	
     	model.addAttribute("userChatDto", userChatDto);
@@ -85,11 +85,14 @@ public class ChatController {
     @ResponseBody
     public ResponseEntity<String> saveChatMessage(@RequestBody SocketEntity chatData){
     	logger.info("controller 도착");
+    	logger.info("getName"+chatData.toString());
     	try{
     		chatService.save(chatData);
     		logger.info("chat data"+chatData);
         	return new ResponseEntity<>("채팅 저장 완료", HttpStatus.OK);
     	} catch(Exception e) {
+    		e.printStackTrace();
+    		System.out.println(e.getStackTrace());
     		return new ResponseEntity<>("채팅 저장 불가", HttpStatus.INTERNAL_SERVER_ERROR);
     	}
     }
