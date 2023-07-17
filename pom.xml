@@ -23,6 +23,13 @@
 
 	<dependencies>
 
+		<!-- SockJS -->
+		<dependency>
+			<groupId>org.webjars</groupId>
+			<artifactId>sockjs-client</artifactId>
+			<version>1.5.1</version>
+		</dependency>
+
 		<!-- Lombok -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
@@ -260,6 +267,7 @@
           <artifactId>json</artifactId>
           <version>20201115</version>
       </dependency>
+      
 
 	</dependencies>
 
