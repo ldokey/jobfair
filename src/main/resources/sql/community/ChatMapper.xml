@@ -2,25 +2,104 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="kr.happyjob.study.community.dao.ChatDao">
 
-    <insert id="save">
-        <selectKey resultType="int" keyProperty="chatNo" order="BEFORE">
-            select ifnull(max(chat_no), 0) + 1 from tb_chat
-        </selectKey>
 
-        INSERT INTO tb_chat (
-            chat_no,
-            loginId,
-            chat_content,
-            reg_date,
-            chatroom_no
-        ) VALUES (
-            #{chatNo},
-            #{name},
-            #{msg},
-            #{regDate},
-            1    
-        );
-    </insert>
+	<!-- 입력 : 채팅 객체 하나   -->
+	<insert id="save">
+		<selectKey resultType="int" keyProperty="chatNo" order="BEFORE">
+			select ifnull(max(chat_no), 0) + 1 from tb_chat
+		</selectKey>
+		INSERT INTO tb_chat (
+		chat_no,
+		loginId,
+		chat_content,
+		reg_date,
+		chatroom_no,
+		chat_count,
+		read_date
+		) VALUES (
+		#{chatNo},
+		#{name},
+		#{msg},
+		#{regDate},
+		#{chatRoomNo},
+		#{readCount},
+		#{readDate}
+		);
+	</insert>
+	
+	<!-- 조회 : 채팅 방 리스트 전체 , 정렬 : 시간 역순 (빠른 게 앞)  -->
+	<select id="selectAll" resultType="kr.happyjob.study.community.model.ChatRoomList">
+	SELECT chatroom_no as chatRoomNo, 
+			chat_title as chatTitle, 
+			reg_date as regDate, 
+			is_delete as isDelete
+	FROM tb_chatroom
+	order by reg_date desc;
+	</select>
+	
+	
+	
+	<!-- 조회 : 채팅 방 1개 , 매개변수 : 채팅방 번호 , 정렬 : 시간순 (빠른 게 뒤)    -->
+	<select id="getChatHistory"
+		resultType="kr.happyjob.study.community.model.SocketEntity">
+		SELECT chat_no as chatNo, 
+			   chat_content as msg, 
+			   reg_date as regDate,
+			   chatroom_no as chatRoomNo, 
+			   loginID as name,
+			   read_date as readDate,
+			   chat_count as readCount
+		FROM tb_chat
+		where chatroom_no = #{chatRoomNo}
+		order by reg_date asc;
+	</select>
+	
+
+	<!-- 조회 : 채팅 객체 1개 ( 방 하나일 때 ) , 매개변수 : 채팅번호   -->
+	<select id="getChatMessageByChatNo" resultType="kr.happyjob.study.community.model.SocketEntity">
+		select 	chat_no as chatNo, 
+				chat_content as chatContent, 
+				chatroom_no as chatRoomNo, 
+				chat_count as readCount,
+				read_date as readDate
+		from tb_chat
+		where chat_no = #{chatNo};	
+	</select>
+	
+	
+	<!-- 조회 : 채팅 객체 하나 , 매개변수 : 채팅번호, 채팅방번호   -->
+	<select id="getChatMessageByChatNoAndChatRoomNo" resultType="kr.happyjob.study.community.model.SocketEntity">
+		SELECT c.chat_no AS chatNo,
+               c.loginId AS name,
+               c.chat_content AS msg,
+               c.reg_date AS regDate,
+               c.chatroom_no AS chatRoomNo,
+               c.chat_count AS readCount,
+               c.read_date AS readDate
+        FROM tb_chat c
+        INNER JOIN tb_chatRoom r ON c.chatroom_no = r.chatroom_no
+        WHERE c.chatroom_no = #{chatRoomNo}
+          AND c.chat_no = #{chatNo}
+	
+	</select>
+	
+	<!-- 안씀 조회 : 채팅의 읽은 갯수만 불러오기 , 매개변수 : 채팅번호, 채팅방번호   -->
+	<select id="getReadCount" resultType="int">
+	 SELECT chat_count as chatNo
+ 	 from tb_chat 
+ 	 
+ 	 where chat_no = #{chatNo}
+	</select>
+	
+	
+	<!-- 수정 : 채팅의 읽은 개수 업데이트 , 매개변수 : 채팅객체, 내역 : readCount, readDate   -->
+	<update id="updateMessage" parameterType="kr.happyjob.study.community.model.SocketEntity">
+	update tb_chat
+	set chat_count = #{readCount},
+		read_date = #{readDate}
+	where chatNo = #{chatNo}
+	</update>
+
 
 </mapper>
 

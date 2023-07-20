@@ -5,8 +5,10 @@ import lombok.Data;
 @Data
 public class SocketEntity {
 	private int chatNo;
-	private int chatRoomNum;
+	private int chatRoomNo;
 	private String name;
 	private String msg;
 	private String regDate;	
+	private int readCount;
+	private String readDate;
 }

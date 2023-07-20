@@ -1,94 +1,91 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8"
-	pageEncoding="UTF-8"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<!-- CSS only -->
-<link
-	href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
-	rel="stylesheet"
-	integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65"
-	crossorigin="anonymous">
-<style>
-@import
-	url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300&display=swap')
-	;
+    <meta charset="UTF-8">
+    <title>Insert title here</title>
 
-body {
-	font-family: 'Noto Sans KR', sans-serif;
-}
+    <!-- CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        .cursor {
+            cursor: pointer;
+        }
+        .chatchat {
+            display: flex;
+            padding: 5px;
+            margin-bottom: 5px;
+            align-items: center;
+        }
+        .chatchat p {
+            margin: 0;
+            padding: 0;
+            font-size: 18px;
+        }
+        #profileImg {
+            border-radius: 12px;
+            margin-right: 5px;
+        }
+    </style>
 
-.cursor {
-	cursor: pointer;
-}
-
-.chatchat {
-	display: flex;
-	padding: 5px;
-	margin-bottom: 5px;
-	align-items: center;
-}
-
-.chatchat p {
-	margin: 0;
-	padding: 0;
-	font-size: 18px;
-}
-
-#profileImg {
-	border-radius: 12px;
-	margin-right: 5px;
-}
-</style>
-<title>Insert title here</title>
-
-<jsp:include page="/WEB-INF/view/common/common_include.jsp"></jsp:include>
-
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.7.0.js" integrity="sha256-JlqSTELeR4TLqP0OG9dxM7yDPqX1ox/HfgiSLBj8+kM=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js" integrity="sha512-iKDtgDyTHjAitUDdLljGhenhPwrbBfqTKWO1mkhSFH3A7blITC9MhYon6SjnMhp4o0rADGw9yAC6EW4t5a4K3g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js" integrity="sha512-1QvjE7BtotQjkq8PxLeF6P46gEpBRXuskzIVgjFpekzFVF4yjRgrQvTG1MTOJ3yQgvTteKAcO7DSZI92+u/yZw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <jsp:include page="/WEB-INF/view/common/common_include.jsp"></jsp:include>
 </head>
 <body>
-	<title>chatRoom</title>
 
-	<div class="container mt-5" style="width: 700px;">
-		<button class="btn btn-primary btn-sm mb-2" onclick="goBack();">뒤로가기</button>
+    <div class="container mt-5" style="width: 700px;">
+        <button class="btn btn-primary btn-sm mb-2" onclick="goBack();">뒤로가기</button>
 
+        <div class="card">
+            <div class="card-header">채팅방 리스트</div>
+            <div class="card-body">
+                <table class="w-100">
+                    <tr>
+                        <td width="20%">번호</td>
+                        <td width="60%">방이름</td>
+                        <td width="20%">시간</td>
+                    </tr>
+                    <c:forEach items="${chatList}" var="chat">
+                        <tr onclick="goRoom(${chat.chatRoomNo})">
+                            <td width="20%">${chat.chatRoomNo}</td>
+                            <td width="60%">${chat.chatTitle}</td>
+                            <td width="20%">${chat.regDate}</td>
+                        </tr>
+                    </c:forEach>
+                </table>
+            </div>
+        </div>
+    </div>
 
-		<div class="card">
-			<div class="card-header">채팅방! ${userChatDto}님 어서오세요</div>
-			<div class="card-body">
-				<div>
-					<div id="target" class="chatWindow"
-						style="height: 400px; overflow-y: scroll;"></div>
-					<div class="d-flex justify-content-between" style="height: 45px;">
-						<input id="text" type="text" style="width: 77%" />
-						<button style="width: 20%" onclick="send();"
-							class="btn btn-success btn-sm">전송</button>
-						<input type="hidden" id="name" value="${userChatDto}">
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+    <div class="container mt-5" id="happy" style="width: 700px;">
+        <button class="btn btn-primary btn-sm mb-2" onclick="goBack();">뒤로가기</button>
 
-	<script src="https://code.jquery.com/jquery-3.7.0.js"
-		integrity="sha256-JlqSTELeR4TLqP0OG9dxM7yDPqX1ox/HfgiSLBj8+kM="
-		crossorigin="anonymous"></script>
-	<script
-		src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"
-		integrity="sha512-iKDtgDyTHjAitUDdLljGhenhPwrbBfqTKWO1mkhSFH3A7blITC9MhYon6SjnMhp4o0rADGw9yAC6EW4t5a4K3g=="
-		crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-	<script
-		src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"
-		integrity="sha512-1QvjE7BtotQjkq8PxLeF6P46gEpBRXuskzIVgjFpekzFVF4yjRgrQvTG1MTOJ3yQgvTteKAcO7DSZI92+u/yZw=="
-		crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <div class="card">
+            <div class="card-header">채팅방! ${userChatDto}님 어서오세요</div>
+            <div class="card-body">
+                <div>
+                    <div id="target" class="chatWindow" style="height: 400px; overflow-y: scroll;"></div>
+                    <div class="d-flex justify-content-between" style="height: 45px;">
+                        <input id="text" type="text" style="width: 77%" />
+                        <button style="width: 20%" onclick="send();" class="btn btn-success btn-sm">전송</button>
+                        <input type="hidden" id="name" value="${userChatDto}">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-
-
-	<!-- 스크립트 작성  -->
-	<script>
+   <script>
 		// 채팅 일시 저장 
 		var chatHtml = "";
 		
@@ -106,22 +103,21 @@ body {
 		    return formattedDate;
 		}
 
-		$(function() {
-			subscribeToChat();
-			
-		});
-		
 		
 		// 과거 채팅정보 불러오기 
 		$(function() {
-			var chatRoomNo = ${chatRoomNo};
+			$("#happy").hide();
 			$.get("/chatHistory.do", {
 				chatRoomNo : chatRoomNo
 			}, function(chatHistory) {
 				displayChatHistory(chatHistory);
 				scrollToBottom()
 			});
+			subscribeToChat();
+			var chatRoomNo = ${chatRoomNo};
 		});
+		
+		
 
 		// displayChatHistory 함수 정의 
 		function displayChatHistory(chatHistory) {
@@ -312,7 +308,25 @@ body {
 		function goBack() {
 			history.go(-1);
 		}
-	</script>
+
+		
+		
+		
+		
+
+ function goRoom(idx){
+	/* location.href = "/community/chatRoomNo.do?chatRoomNo="+idx; */
+	var param = {
+			chatRoomNo : idx
+	}
+	function listCallBack (res) {
+		gf
+	}
+	
+	callAjax("/community/chatRoomNo.do","post","text","false", param, listCallBack);
+} 
+    
+</script>
 
 </body>
 </html>

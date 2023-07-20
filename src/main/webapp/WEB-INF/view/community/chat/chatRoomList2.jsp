@@ -7,12 +7,15 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<!-- CSS only -->
+
 <link
 	href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
 	rel="stylesheet"
 	integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65"
 	crossorigin="anonymous">
+
+<!-- CSS only -->
+
 <style>
 @import
 	url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300&display=swap')
@@ -43,21 +46,69 @@ body {
 	border-radius: 12px;
 	margin-right: 5px;
 }
+
+
+
+
 </style>
+
+<!-- CSS only -->
+<link
+	href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
+	rel="stylesheet"
+	integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65"
+	crossorigin="anonymous">
+
+
 <title>Insert title here</title>
 
-<jsp:include page="/WEB-INF/view/common/common_include.jsp"></jsp:include>
-
+	<script src="https://code.jquery.com/jquery-3.7.0.js"
+		integrity="sha256-JlqSTELeR4TLqP0OG9dxM7yDPqX1ox/HfgiSLBj8+kM="
+		crossorigin="anonymous"></script>
+		
+	<jsp:include page="/WEB-INF/view/common/common_include.jsp"></jsp:include>
+	
 </head>
-<body>
-	<title>chatRoom</title>
 
-	<div class="container mt-5" style="width: 700px;">
+<body>
+	<div id="happy2"> hi </div>
+	<div id="happy3"> hi </div>
+
+	<div class="container mt-5" style="width: 700px;" id="happy1">
+		<button class="btn btn-primary btn-sm mb-2" onclick="goBack();">뒤로가기!!!</button>
+
+
+		<div class="card" >
+			<div class="card-header">채팅방 리스트 </div>
+			<div class="card-body">
+				
+				<table class="w-100">
+				<tr> 
+					<td width="20%"> 번호 </td>
+					<td width="60%"> 방이름 </td>
+					<td width="20%"> 시간 </td>
+				</tr>
+            <c:forEach items="${chatList}" var="chat">
+            
+                <tr onclick="goRoom(${chat.chatRoomNo})">
+                
+                    <td width="20%">${chat.chatRoomNo}</td>
+                    <td width="60%">${chat.chatTitle}</td>
+                    <td width="20%">${chat.regDate}</td>
+                </tr>
+            </c:forEach>
+				</table>
+			
+			</div>
+		</div>
+	</div>
+	
+
+	<div class="container mt-5" id="happy" style="width: 700px;">
 		<button class="btn btn-primary btn-sm mb-2" onclick="goBack();">뒤로가기</button>
 
-
-		<div class="card">
-			<div class="card-header">채팅방! ${userChatDto}님 어서오세요</div>
+		<div class="card" >
+			<div class="card-header">채팅방! ${userChatDto}님 어서오세요!!!!</div>
 			<div class="card-body">
 				<div>
 					<div id="target" class="chatWindow"
@@ -73,6 +124,8 @@ body {
 		</div>
 	</div>
 
+
+
 	<script src="https://code.jquery.com/jquery-3.7.0.js"
 		integrity="sha256-JlqSTELeR4TLqP0OG9dxM7yDPqX1ox/HfgiSLBj8+kM="
 		crossorigin="anonymous"></script>
@@ -87,7 +140,10 @@ body {
 
 
 
-	<!-- 스크립트 작성  -->
+
+
+
+<!-- 스크립트 작성  -->
 	<script>
 		// 채팅 일시 저장 
 		var chatHtml = "";
@@ -103,25 +159,26 @@ body {
 		    var minutes = ("0" + currentTime.getMinutes()).slice(-2);
 		    var seconds = ("0" + currentTime.getSeconds()).slice(-2);
 		    var formattedDate = year + "-" + month + "-" + day + " " + hours + ":" + minutes + ":" + seconds;
-		    return formattedDate;
+
 		}
 
-		$(function() {
-			subscribeToChat();
-			
-		});
-		
 		
 		// 과거 채팅정보 불러오기 
 		$(function() {
-			var chatRoomNo = ${chatRoomNo};
+			$("#happy").hide();
+			$("#happy1").hide();
+			$("#happy2").hide();
 			$.get("/chatHistory.do", {
 				chatRoomNo : chatRoomNo
 			}, function(chatHistory) {
 				displayChatHistory(chatHistory);
 				scrollToBottom()
 			});
+			subscribeToChat();
+			var chatRoomNo = ${chatRoomNo};
 		});
+		
+		
 
 		// displayChatHistory 함수 정의 
 		function displayChatHistory(chatHistory) {
@@ -312,7 +369,26 @@ body {
 		function goBack() {
 			history.go(-1);
 		}
-	</script>
+
+		
+		
+		
+		
+
+ function goRoom(idx){
+	/* location.href = "/community/chatRoomNo.do?chatRoomNo="+idx; */
+	var param = {
+			chatRoomNo : idx
+	}
+	function listCallBack (res) {
+		gf
+	}
+	
+	callAjax("/community/chatRoomNo.do","post","text","false", param, listCallBack);
+} 
+    
+</script>
+
 
 </body>
 </html>

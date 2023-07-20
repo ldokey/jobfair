@@ -7,4 +7,5 @@ public class ChatUserDto {
 	private String name;
 	private String fileCd;
 	private String regDate;
+	private int chatRoomNo;
 }

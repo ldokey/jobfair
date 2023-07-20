@@ -45,9 +45,6 @@ body {
 }
 </style>
 <title>Insert title here</title>
-
-<jsp:include page="/WEB-INF/view/common/common_include.jsp"></jsp:include>
-
 </head>
 <body>
 	<title>chatRoom</title>

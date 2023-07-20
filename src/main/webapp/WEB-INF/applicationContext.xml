@@ -68,11 +68,21 @@
    <bean id="mysqlDataSource" class="org.apache.commons.dbcp.BasicDataSource"
 		destroy-method="close">
 		<property name="driverClassName" value="com.mysql.jdbc.Driver" />
+		<property name="url" value="jdbc:mysql://localhost:3306/julrecruit?allowMultiQueries=true" />
+		<property name="username" value="root" />
+		<property name="password" value="park6580" />
+		<property name="validationQuery" value="select 1" />
+	</bean> 
+	
+	
+<!--    <bean id="mysqlDataSource" class="org.apache.commons.dbcp.BasicDataSource"
+		destroy-method="close">
+		<property name="driverClassName" value="com.mysql.jdbc.Driver" />
 		<property name="url" value="jdbc:mysql://13.125.198.29:3306/julrecruit?allowMultiQueries=true" />
 		<property name="username" value="root" />
 		<property name="password" value="hwangkh704!" />
 		<property name="validationQuery" value="select 1" />
-	</bean> 
+	</bean>  -->
 
 
 	
