@@ -31,7 +31,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer{
 	
 		registry.enableSimpleBroker("/topic");
 		registry.setApplicationDestinationPrefixes("app");
-		
 	}
 
 	
@@ -39,7 +38,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer{
 	public void registerStompEndpoints(StompEndpointRegistry registry) {
 		
 		registry.addEndpoint("/chat/room").setAllowedOrigins("*").withSockJS();
-		
 	}
 
 	

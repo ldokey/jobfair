@@ -45,24 +45,22 @@
             border-radius: 12px;
             margin-right: 5px;
         }
-		#noticeregfile {
+		#chatModal {
 			position : fixed; top:0; bottom:0; left:0; right:0;
 			z-index: 99; 
 			width : 100%;
 			height : 100%;
-			background: rgba(0,0,0,90%)
+			background: rgba(0,0,0,70%)
 		}
     </style>
 </head>
 
 <body>
-<%-- <jsp:include page="/WEB-INF/view/common/common_include.jsp"></jsp:include> --%>
-
 
     <div class="container mt-5" style="width: 700px;">
         <!-- Chat room list section -->
         <div class="card">
-            <div class="card-header">채팅방 리스트</div>
+            <div class="card-header">${userId}님의 채팅방 리스트</div>
             <div class="card-body">
                 <table class="w-100">
                     <tr>
@@ -83,22 +81,25 @@
         </div>
     </div>
 
+
+
+    
+    
+
  
-		<div id="noticeregfile" class="layerPop layerType2" style="width: 600px; display: none;">
-					
-			
+		<div id="chatModal" class="layerPop layerType2" style="width: 600px; display: none;">
 			<div class="container mt-5" id="happy" style="width: 700px;">
 				<a href="" class="closePop"><span class="hidden">닫기</span></a>
         
 			        <div class="card">
-			            <div class="card-header">채팅방! ${userChatDto}님 어서오세요</div>
+			            <div class="card-header">채팅방! ${userId}님 어서오세요</div>
 			            <div class="card-body">
 			                <div>
 			                    <div id="target" class="chatWindow" style="height: 400px; overflow-y: scroll;"></div>
 			                    <div class="d-flex justify-content-between" style="height: 45px;">
 			                        <input id="text" type="text" style="width: 77%" />
 			                        <button style="width: 20%" onclick="send();" class="btn btn-success btn-sm">전송</button>
-			                        <input type="hidden" id="name" value="${userChatDto}">
+			                        <input type="hidden" id="name" value="${userId}">
 			                    </div>
 			                </div>
 			            </div>
@@ -109,18 +110,60 @@
  
  
  
+ <div class="container mt-5" style="width: 700px;">
+        <!-- Chat room list section -->
+        <div class="card">
+            <div class="card-header">유저목록</div>
+            <div class="card-body">
+                <table class="w-100">
+                    <tr>
+                        <td width="20%">번호   </td>
+                        <td width="60%"> 아이디  </td>
+                        <td width="20%"> 기타  </td>
+                    </tr>
+						
+						
+						    <tr >
+						        <td width="20%"></td>
+						        <td width="60%"><button id="createChatButton" data-userid="dooli">Create Chat</button> </td>
+						        <td width="20%"> </td>
+						    </tr>
+						    
+						
+                </table>
+            </div>
+        </div>
+    </div>
+ 
+ 
+ 
+ 
  <script>
+ 
  $(function(){
-	 var test;
+	 // 방번호를 임시로 담는 roomNum 
+	 var roomNum;
  })
+ 
+$("#createChatButton").on("click", function(){
+	var targetUserId = $(this).data("userId");
+	console.log(targetUserId);
+	createOrGetChatRoom(targetUserId);
+})
+ 
+ 
+ 
+ // 채팅 일시 저장 
+ var chatHtml = "";
+ 
  
 	function openPop(chatRoomNo) {
 		/* initpopup(); */
-		gfModalPop("#noticeregfile");
+		gfModalPop("#chatModal");
 		
 		console.log(chatRoomNo);
 		
-		test=chatRoomNo;
+		roomNum=chatRoomNo;
 		
         $.ajax({
         	url : "/chatHistory.do",
@@ -134,9 +177,11 @@
      
   // displayChatHistory 함수 정의 
      function displayChatHistory(chatHistory) {
-         var chatHtml = "";
          //스톰프 연결 : 모달창 등장시, 스톰프 연결 
-         subscribeToChat(test);
+         subscribeToChat(roomNum);
+         console.log("data : "+data)
+         console.log("roomNum : "+roomNum)
+        
          console.log(chatHistory);
          for (var i = 0; i < chatHistory.length; i++) {
              var data = chatHistory[i];
@@ -146,7 +191,7 @@
              var count = data.readCount;
 
              // 채팅창에 과거 메시지 붙이기 + 채팅 출력 위치 - 상대방 좌측 정렬   
-             if (sender != '${userChatDto.name}') {
+             if (sender != '${userId}') {
                  chatHtml += '<div class="chatchat">';
                  chatHtml += '<div style="display:flex; flex-direction:column;">';
                  chatHtml += '<p>' + sender + ' : </p>';
@@ -167,26 +212,38 @@
              }
          }
          $('#target').append(chatHtml);
+         scrollToBottom();
      }
   
   // 스톰프 (속js 보조) 연결 및 채팅 
-     function subscribeToChat(chatRoomNo) {
+     function subscribeToChat(roomNum) {
          var socket = new SockJS("/chat/room");
          stompClient = Stomp.over(socket);
          stompClient.connect({}, function(frame) {
-             console.log("Connected" + frame);
-             stompClient.subscribe("/topic/"+chatRoomNo, function(res) {
-                 var data = JSON.parse(res.body);
-                 console.log(data);
+        	 
+             console.log("Connected" + frame + roomNum); // 도착 
+             
+             stompClient.subscribe("/topic/" + roomNum, function(res) {
+            	 var data = JSON.parse(res.body);
+                 
+                 console.log("aa"+ data);// 안나옴 
+                 
                  var formattedDate = getCurrentTime();
                  var sender = data.name;
                  var message = data.msg;
                  var date = data.regDate;
+                 
+                 console.log(">>>>>>data.name " + data.name)
+                 
                  var count = data.readCount;
                  // 메시지 읽음을 서버에 전달 
-                 /* sendReadCount(data.chatNo); */
+                 sendReadCount(data.chatNo);
                  // 채팅 출력 위치 - 상대방 좌측 정렬  
-                 if (data.name != '${userChatDto.name}') {
+                 if (data.name != '${userId}') {
+                	 
+                	 console.log(">>>>>>data.name " + data.name)
+                	 
+                	 
                      chatHtml = '<div class="chatchat">';
                      chatHtml += '<div style="display:flex; flex-direction:column;">';
                      chatHtml += '<p>' + sender + ' : </p>';
@@ -194,11 +251,14 @@
                      chatHtml += '<p style="background:#f1f1f1; padding:5px 10px;">' + message + '</p>';
                      chatHtml += '<p style="font-size: 12px; color: #999; margin-right: 10px; padding-top: 6px;">&lt; ' + formattedDate + ' &gt;</p>';
                      chatHtml += '</div>';
+                     
+                    console.log(">>>>>>>>>sender: " + sender)
+                    
                      $('#target').append(chatHtml);
                  } else {
                      // 채팅 출력 위치 - 본인 우측 정렬 
                      chatHtml = '<div class="chatchat" style="justify-content:flex-end; margin-right:5px;">';
-                     chatHtml += '<p style="font-size: 12px; color: #999; margin-right: 10px; padding-top: 6px;">&lt; ' + count + ' &gt;</p>';
+                     /* chatHtml += '<p style="font-size: 12px; color: #999; margin-right: 10px; padding-top: 6px;">&lt; ' + count + ' &gt;</p>'; */
                      chatHtml += '<p style="font-size: 12px; color: #999; margin-right: 10px; padding-top: 6px;">&lt; ' + formattedDate + ' &gt;</p>';
                      chatHtml += '<div style="display:flex; flex-direction:column;">';
                      chatHtml += '<p>' + sender + ' : </p>';
@@ -230,15 +290,15 @@
              "name": name,
              "msg": text,
              "regDate": time,
-             "chatRoomNo": test
+             "chatRoomNo": roomNum
          };
 
-         // 날짜추가하기
-         stompClient.send("/app/server/" + test, {}, JSON.stringify({
+         // 스톰프출발 ~ 
+         stompClient.send("/app/server/" + roomNum, {}, JSON.stringify({
              "name": name,
              "msg": text,
              "regDate": time,
-             "chatRoomNo": test
+             "chatRoomNo": roomNum
          }));
 
          // 채팅 DB에 저장 
@@ -259,7 +319,7 @@
      }
    
      // 메시지 읽음 
-   /*   function sendReadCount(chatNo) {
+      function sendReadCount(chatNo) {
          $.ajax({
              type: "POST",
              url: "/chat/read",
@@ -272,7 +332,7 @@
                  console.log("read error");
              }
          })
-     } */
+     } 
  
  
  	function gfModalPop(id) {
@@ -298,79 +358,8 @@
 		$(id).fadeIn(100); //페이드인 속도..숫자가 작으면 작을수록 빨라집니다.
 	}
  
- 
- /* function initpopup(object) {
-		
-		// 저장 버튼을 눌렀을때 팝업에 데이터가 없게 한다.
-		if(object == "" || object == null || object == undefined) {
-			
-			$("#btnDeletefile").hide();
-			$("#writerfile").val($("#userNm").val());
-			$("#notice_datefile").val(getToday());
 
-			$("#notice_titlefile").val("");
-			$("#notice_detfile").val("");
-			$("#addfile").val("");
-			$("#fileview").empty();
-			$("#action").val("I");	
-		} else {
-			var param = {
-					notice_no : object.detail.notice_no
-			}
-			
-			$("#btnDeletefile").show();
-			$("#notice_titlefile").val(object.detail.notice_title);
-			$("#notice_datefile").val(object.detail.reg_date);
-			$("#writerfile").val(object.detail.writer);
-			$("#notice_detfile").val(object.detail.notice_content);
-			$("#noticeno").val(object.detail.notice_no);
-			$("#filecd").val(object.detail.file_cd);
-			$("#addfile").val("");
-			$("#action").val("U");
-			
-			// 저장된 파일 미리보기
-			var file_name = object.detail.file_name;
-			var filearr = [];
-			var previewhtml = "";
-			
-			if( file_name == "" || file_name == null || file_name == undefined) {
-				previewhtml = "";
-			} else {
-				
-				filearr = file_name.split(".");
-				console.log(filearr);
-				
-				
-				if (filearr[1] == "jpg" || filearr[1] == "png") {
-					previewhtml = "<a href='javascript:fn_downaload()'>   <img src='" + object.detail.file_nadd + "' style='width: 200px; height: 130px;' />  </a>";
-				} else {
-					previewhtml = "<a href='javascript:fn_downaload()'>" + object.detail.file_name  + "</a>";
-				}
-			}
-			
-			$("#fileview").empty().append(previewhtml);
-			
-			var justcallback = function(res){
-				console.log(res);
-			}
-			callAjax("/community/pluswatch.do", "post", "json", "false", param, justcallback);
-		}
-	} */
- 
-	// 오늘 날짜 가져오는 함수
-	function getToday() {
-		var date = new Date();
-		var year = date.getFullYear();
-		var month = ("0" + (1 + date.getMonth())).slice(-2);
-		var day = ("0" + date.getDate()).slice(-2);
 
-		return year + "-" + month + "-" + day;
-	}
- 
- 
- 
- // 채팅 일시 저장 
-    var chatHtml = "";
 	
 
     // 원하는 형식으로 날짜 정보 가져오기
@@ -387,10 +376,17 @@
     }
     
     // 새로운 채팅 입력시, 스크롤 맨 아래로 이동   
-    function scrollToBottom() {
-        var chatWindow = document.getElementById('target');
-        chatWindow.scrollTop = chatWindow.scrollHeight;
-    }
+	function scrollToBottom() {
+	    var chatWindow = $('#target');
+	    chatWindow.scrollTop(chatWindow.prop("scrollHeight"));
+	}
+	// 엔터로 전송버튼 설정하기 
+	$(window).on('keydown', function(e) {
+		if (e.keyCode == 13) { // 키보드 배열 중, 13번은 엔터키. 이 e가 발생되면, 
+			send();
+		}
+		;
+	})
     
     
  </script>

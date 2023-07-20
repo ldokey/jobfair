@@ -273,7 +273,7 @@
 			};
 
 			// 날짜추가하기
-			stompClient.send("/app/server/${chatRoomNo}", {}, JSON.stringify({
+			stompClient.send("/app/server/+${chatRoomNo}", {}, JSON.stringify({
 				"name" : name,
 				"msg" : text,
 				"regDate" : time,

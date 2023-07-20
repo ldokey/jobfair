@@ -1,8 +1,6 @@
 package kr.happyjob.study.community.controller;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +23,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import kr.happyjob.study.community.model.ChatRoomList;
-import kr.happyjob.study.community.model.ChatUserDto;
 import kr.happyjob.study.community.model.SocketEntity;
 import kr.happyjob.study.community.service.ChatService;
 import lombok.RequiredArgsConstructor;
@@ -47,23 +44,28 @@ public class StompConfig {
 	@MessageMapping("/server/{roomId}")
 	@SendTo("/topic/{roomId}")
 	public SocketEntity server(SocketEntity socketMsg, @PathVariable String roomId) {
-		System.out.println(roomId);
+		System.out.println("roomId>>>>>>>>>>>>> : "+roomId);
 		return socketMsg;
 	}
 	
 	
 	// 채팅리스트 접속
 	@GetMapping("/community/chat.do")
-	public String roomList(Model model) throws Exception {
+	public String roomList(HttpSession session, Model model) throws Exception {
+		
 		List<ChatRoomList> chatList = chatService.selectAll();
+	    String userId = (String) session.getAttribute("loginId");
+	    logger.info("로그인한 사용자 아이디: " + userId);
+
+	    model.addAttribute("userId",userId);
 		model.addAttribute("chatList", chatList);
 		return "community/chat/chatRoomList"; // changed 
 	}
 	
 	
-	
+	//채팅방 접속 ajax
 	@GetMapping("/community/chatRoomNo.do")
-	public String enter (HttpSession session, @RequestParam int chatRoomNo, Model model) {
+	public String enter (HttpSession session, @RequestParam int chatRoomNo, Model model) throws Exception {
 	   
 		// 세션에서 로그인한 사용자 아이디를 가져옵니다.
 	    String userId = (String) session.getAttribute("loginId");
@@ -71,6 +73,14 @@ public class StompConfig {
 
 	    model.addAttribute("userChatDto",userId);
 	    model.addAttribute("chatRoomNo",chatRoomNo);
+	    
+	    // 업데이트 대비용 -> updateMesaage 로 넘기는 파라미터 
+	    Map<String, Object> requestBody = new HashMap<>();
+	    requestBody.put("chatRoomNo", chatRoomNo);
+	    requestBody.put("userId", userId);
+	    
+	    chatService.updateMessage(requestBody);
+	    
 	    
 	    
 	    
@@ -105,6 +115,9 @@ public class StompConfig {
 
 	
 	
+	
+	
+	
 //	 // 채팅방에 입장 !  
 //    @PostMapping("/community/chatRoomNo.do")
 //    @ResponseBody
@@ -133,6 +146,16 @@ public class StompConfig {
 //    
     
     
+    // 채팅 내역 조회  ajax ( 방 하나 히스토리 부르기 )
+    @GetMapping("/chatHistory.do")
+    @ResponseBody
+    public List<SocketEntity> getChatHistory( int chatRoomNo) throws Exception {
+    	
+        return chatService.getChatHistory(chatRoomNo);
+    }
+    
+	
+	
     
     // 채팅 정보 저장 
     @PostMapping("/saveChat.do")
@@ -151,13 +174,6 @@ public class StompConfig {
     		e.printStackTrace();
     		return new ResponseEntity<>("채팅 저장 불가", HttpStatus.INTERNAL_SERVER_ERROR);
     	}
-    }
-    
-    // 채팅 내역 조회  ajax ( 방 하나 히스토리  )
-    @GetMapping("/chatHistory.do")
-    @ResponseBody
-    public List<SocketEntity> getChatHistory(int chatRoomNo) throws Exception {
-        return chatService.getChatHistory(chatRoomNo);
     }
     
     
@@ -180,4 +196,8 @@ public class StompConfig {
     		return ResponseEntity.ok("메시지 읽음 처리 실패");
     	}
     }
+    
+    
+    // 채팅 임시 발송 
+    
 }
