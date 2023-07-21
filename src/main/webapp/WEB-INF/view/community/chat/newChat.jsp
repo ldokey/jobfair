@@ -70,15 +70,13 @@
                         <td width="60%"> 아이디  </td>
                         <td width="20%"> 기타  </td>
                     </tr>
-						
-						
+
 						    <tr >
 						        <td width="20%"></td>
-						        <td width="60%"><button id="createChatButton" data-userid="dooli">Create Chat</button> </td>
+						        <td width="60%"><button id="createChatButton" data-userid="${user}">Create Chat</button> </td>
 						        <td width="20%"> </td>
 						    </tr>
-						    
-						
+
                 </table>
             </div>
         </div>
@@ -87,6 +85,37 @@
  
  
  <script>
+ alert("asdf");	   
+ 
+ 
+ $(function(){
+	
+	})
+
+$("#createChatButton").on("click", function(){
+	 console.log("createChatButton 입장");
+    var targetUserId = $(this).data("userid");
+    createOrGetChatRoom(targetUserId);
+    console.log("targetUserId: "+ targetUserId);
+})	
+ 
+ function createOrGetChatRoom(targetUserId) {
+    $.ajax({
+        type: "POST",
+        url: "/createOrGetChatRoom",
+        contentType: "application/json",
+        data: JSON.stringify(targetUserId),
+        success: function(response) {
+            var chatRoomNo = response;
+            
+            console.log(chatRoomNo);
+        },
+        error: function(error) {
+            alert("에러발생");
+        }
+    });
+}
+ 
  
  
  

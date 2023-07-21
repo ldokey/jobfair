@@ -199,5 +199,41 @@ public class StompConfig {
     
     
     // 채팅 임시 발송 
+    @GetMapping("/asdf.do")
+    public String createOrGetChatRoom1(Model model) {
+    	
+    	String user = "dooly";
+        model.addAttribute("user", user);
+        System.out.println("user : "+user);
+        
+//        return ResponseEntity.ok(chatRoomNo);
+    	 return "community/chat/newChat";
+    }
+    
+    
+    // 새로운 채팅방 만들기 
+    @PostMapping("/createOrGetChatRoom")
+    public ResponseEntity<?> createOrGetChatRoom(@RequestBody String targetUserId, HttpSession session) throws Exception{
+    	
+    	String loginId = (String)session.getAttribute("loginId");
+    	
+    	logger.info("컨트롤러 입장 : 로그인 아이디 "+loginId);
+    	
+    	
+    	// 기존 방 출력 
+    	int chatRoomNo = chatService.createOrGetChatRoom(loginId, targetUserId);
+    	
+    	
+    	logger.info("생성완료  : 생성된 번호 및  아이디 "+ chatRoomNo + targetUserId);
+    	
+//    	if(existingChatRoomNo != -1) {
+//    		return ResponseEntity.ok(existingChatRoomNo);
+//    	} else {
+//    		int newChatRoomNo = chatService.creatNewChatRoom();
+//    		return ResponseEntity.ok(newChatRoomNo);
+//    	}
+    	return ResponseEntity.ok(chatRoomNo);
+    }
+    
     
 }

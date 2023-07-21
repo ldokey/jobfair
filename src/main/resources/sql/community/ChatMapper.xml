@@ -4,7 +4,7 @@
 
 
 	<!-- 입력 : 채팅 객체 하나   -->
-	<insert id="save">
+	<insert id="save" parameterType="kr.happyjob.study.community.model.SocketEntity">
 		<selectKey resultType="int" keyProperty="chatNo" order="BEFORE">
 			select ifnull(max(chat_no), 0) + 1 from tb_chat
 		</selectKey>
@@ -24,7 +24,7 @@
 		#{chatRoomNo},
 		#{readCount},
 		#{readDate}
-		);
+		)
 	</insert>
 	
 	<!-- 조회 : 채팅 방 리스트 전체 , 정렬 : 시간 역순 (빠른 게 앞)  -->
@@ -32,9 +32,10 @@
 	SELECT chatroom_no as chatRoomNo, 
 			chat_title as chatTitle, 
 			reg_date as regDate, 
-			is_delete as isDelete
+			is_delete as isDelete,
+			update_date as updateDate
 	FROM tb_chatroom
-	order by reg_date desc;
+	order by reg_date desc
 	</select>
 	
 	
@@ -51,7 +52,7 @@
 			   chat_count as readCount
 		FROM tb_chat
 		where chatroom_no = #{chatRoomNo}
-		order by reg_date asc;
+		order by reg_date asc
 	</select>
 	
 
@@ -63,7 +64,7 @@
 				chat_count as readCount,
 				read_date as readDate
 		from tb_chat
-		where chat_no = #{chatNo};	
+		where chat_no = #{chatNo}	
 	</select>
 	
 	
@@ -97,9 +98,47 @@
 	update tb_chat
 	set chat_count = #{readCount},
 		read_date = #{readDate}
-	where chatNo = #{chatNo}
+	where chat_no = #{chatNo}
 	</update>
 
+	<select id="createOrGetChatRoom" resultType="integer">
+	SELECT DISTINCT chatroom_no 
+		FROM tb_chat
+		WHERE loginID = #{loginId} AND chatroom_no IN (
+		    SELECT chatroom_no
+		    FROM tb_chat 
+		    WHERE loginID = #{targetUserId}
+		) limit 1
+	</select>
+	
+	<!-- 입력 : 새로운 채팅방 생성  -->
+	<insert id="createChatRoom">
+		<selectKey resultType="int" keyProperty="chatRoomNo" order="BEFORE">
+		select ifnull(max(chatroom_no), 0) + 1 from tb_chatroom
+		</selectKey>
+		insert into tb_chatroom(
+			chatroom_no,
+			chat_Title,
+			reg_Date
+		)values(
+			#{chatRoomNo},
+			#{chatTitle},
+			#{regDate}
+			)
+	</insert>
+	
+	<!-- 조회 : 새로 생긴 채팅 방 max 번호   -->
+	<select id="selectMaxChatRoomNo" resultType="int" >
+		SELECT MAX(chatroom_no) as chatRoomNo
+		FROM tb_chatRoom
+	</select>
+	
+	<!-- 수정 : 아이디 업데이트  -->
+	<update id ="updateID" parameterType="kr.happyjob.study.community.model.SocketEntity">
+		update tb_chat
+			set loginId = #{name}
+			where chat_no = #{chatNo}
+	</update>
 
 </mapper>
 

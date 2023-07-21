@@ -19,5 +19,13 @@ public interface ChatDao {
 
 	public List<ChatRoomList> selectAll();
 
-	public SocketEntity updateMessage(SocketEntity chatMsg); 
+	public SocketEntity updateMessage(SocketEntity chatMsg);
+
+	public Integer createOrGetChatRoom(String loginId, String targetUserId);
+
+	public int createChatRoom(ChatRoomList newChatRoom);
+
+	public int selectMaxChatRoomNo();
+
+	public int updateID(SocketEntity chatData); 
 }
