@@ -29,14 +29,30 @@
 	
 	<!-- 조회 : 채팅 방 리스트 전체 , 정렬 : 시간 역순 (빠른 게 앞)  -->
 	<select id="selectAll" resultType="kr.happyjob.study.community.model.ChatRoomList">
-	SELECT chatroom_no as chatRoomNo, 
-			chat_title as chatTitle, 
-			reg_date as regDate, 
-			is_delete as isDelete,
-			update_date as updateDate
-	FROM tb_chatroom
-	order by reg_date desc
+		SELECT chatroom_no as chatRoomNo, 
+				chat_title as chatTitle, 
+				reg_date as regDate, 
+				is_delete as isDelete,
+				update_date as updateDate
+		FROM tb_chatroom
+		order by reg_date desc
 	</select>
+	
+	<!-- 조회 : 채팅방 리스트 전체 ( 아이디별로 조회 ) , 정렬 : 시간 역순  selectAllById -->
+	<select id="selectAllById" resultType="kr.happyjob.study.community.model.ChatRoomList">
+	    SELECT DISTINCT cr.chatroom_no as chatRoomNo, 
+	           cr.chat_title as chatTitle, 
+	           cr.reg_date as regDate, 
+	           cr.is_delete as isDelete,
+	           cr.update_date as updateDate 
+	    FROM tb_chatRoom cr
+	    JOIN tb_chat c ON cr.chatroom_no = c.chatroom_no
+	    WHERE c.loginID = #{loginId} AND cr.is_delete = 2
+	    ORDER BY cr.reg_date DESC;
+	</select>
+
+	
+	
 	
 	
 	
@@ -100,16 +116,23 @@
 		read_date = #{readDate}
 	where chat_no = #{chatNo}
 	</update>
-
+	
+	
+	<!--조회 : 채팅방 조회 (참여한 곳)   -->
 	<select id="createOrGetChatRoom" resultType="integer">
-	SELECT DISTINCT chatroom_no 
-		FROM tb_chat
-		WHERE loginID = #{loginId} AND chatroom_no IN (
+	  	SELECT DISTINCT c.chatroom_no 
+		FROM tb_chat c
+		JOIN tb_chatRoom cr ON c.chatroom_no = cr.chatroom_no
+		WHERE c.loginID = #{loginId}
+		AND c.chatroom_no IN (
 		    SELECT chatroom_no
 		    FROM tb_chat 
 		    WHERE loginID = #{targetUserId}
-		) limit 1
-	</select>
+		)
+		AND cr.is_delete = 2
+		LIMIT 1;
+	  
+	 </select>
 	
 	<!-- 입력 : 새로운 채팅방 생성  -->
 	<insert id="createChatRoom">
@@ -119,11 +142,13 @@
 		insert into tb_chatroom(
 			chatroom_no,
 			chat_Title,
-			reg_Date
+			reg_Date,
+			is_delete
 		)values(
 			#{chatRoomNo},
 			#{chatTitle},
-			#{regDate}
+			#{regDate},
+			#{isDelete}
 			)
 	</insert>
 	
@@ -139,6 +164,28 @@
 			set loginId = #{name}
 			where chat_no = #{chatNo}
 	</update>
+	
+	<!--조회 : 접속자가 속한 채팅방 카운트 ( 채팅방 개수 조회 ), 매개변수 : 로그인아이디   -->
+	<select id="countChatRoomList" resultType="int">
+		SELECT COUNT(DISTINCT c.chatroom_no)  
+		FROM tb_chat c
+		JOIN tb_chatroom cr ON c.chatroom_no = cr.chatroom_no 
+		WHERE c.loginID = #{loginId}
+		AND cr.is_delete = 2; 
+		
+ 		<if test="(srctitle != null) and ( !''.equals(srctitle) )">
+			and tn.notice_title Like CONCAT('%', #{srctitle}, '%')
+		</if>
+		<if test="(srcsdate != null) and ( !''.equals(srcsdate) )">
+			and tn.reg_date <![CDATA[>=]]>
+			#{srcsdate}
+		</if>
+		<if test="(srcedate != null) and ( !''.equals(srcedate) )">
+			and tn.reg_date <![CDATA[<=]]>
+			#{srcedate}
+		</if> 
+	</select>
+
 
 </mapper>
 

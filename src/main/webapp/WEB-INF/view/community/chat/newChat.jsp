@@ -94,7 +94,7 @@
 
 $("#createChatButton").on("click", function(){
 	 console.log("createChatButton 입장");
-    var targetUserId = $(this).data("userid");
+    var targetUserId = $(this).data("userid"); 
     createOrGetChatRoom(targetUserId);
     console.log("targetUserId: "+ targetUserId);
 })	
@@ -104,7 +104,7 @@ $("#createChatButton").on("click", function(){
         type: "POST",
         url: "/createOrGetChatRoom",
         contentType: "application/json",
-        data: JSON.stringify(targetUserId),
+        data: targetUserId,
         success: function(response) {
             var chatRoomNo = response;
             

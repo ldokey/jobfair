@@ -21,11 +21,16 @@ public interface ChatDao {
 
 	public SocketEntity updateMessage(SocketEntity chatMsg);
 
-	public Integer createOrGetChatRoom(String loginId, String targetUserId);
+	public Integer createOrGetChatRoom(Map<String, String> paramMap);
 
 	public int createChatRoom(ChatRoomList newChatRoom);
 
 	public int selectMaxChatRoomNo();
 
-	public int updateID(SocketEntity chatData); 
+	public int updateID(SocketEntity chatData);
+
+	public List<ChatRoomList> selectAllById(String loginId);
+
+
+	public int countChatRoomList(Map<String, Object> paramMap); 
 }

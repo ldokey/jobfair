@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.log4j.LogManager;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -31,16 +34,16 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class StompConfig {
 	
-	//의존성 주입 
+	// 기본설정 : 의존성 주입 
 	private final ChatService chatService;
 
 	
-	// 로거 설정 
+	// 기본설정 : 로거 설정 
 	private final Logger logger = LogManager.getLogger(this.getClass());
 	private final String className = this.getClass().toString();
 
 	
-	// 메시지컨트롤러 	
+	// 기본설정 : 메시지컨트롤러 	
 	@MessageMapping("/server/{roomId}")
 	@SendTo("/topic/{roomId}")
 	public SocketEntity server(SocketEntity socketMsg, @PathVariable String roomId) {
@@ -48,22 +51,57 @@ public class StompConfig {
 		return socketMsg;
 	}
 	
-	
-	// 채팅리스트 접속
-	@GetMapping("/community/chat.do")
-	public String roomList(HttpSession session, Model model) throws Exception {
+	// 접속 : 첫 화면 ( 아이디, 유저네임 전달 )  
+	@RequestMapping("/community/chat.do")
+	public String chat(Model model, @RequestParam Map<String, Object> paramMap, HttpServletRequest request, HttpServletResponse response, HttpSession session) throws Exception {
 		
-		List<ChatRoomList> chatList = chatService.selectAll();
-	    String userId = (String) session.getAttribute("loginId");
-	    logger.info("로그인한 사용자 아이디: " + userId);
+		String loginId = (String) session.getAttribute("loginId");
+		model.addAttribute("loginId",loginId);
+		model.addAttribute("userNm",(String)session.getAttribute("userNm"));
 
-	    model.addAttribute("userId",userId);
-		model.addAttribute("chatList", chatList);
-		return "community/chat/chatRoomList"; // changed 
+		
+		
+		logger.info("로그인한 사용자 아이디>>>>: " + loginId);
+		List<ChatRoomList> chatRoomList = chatService.selectAllById(loginId);
+
+	    model.addAttribute("loginId",loginId);
+		model.addAttribute("chatRoomList", chatRoomList);
+	
+		
+		return "community/chat/chat";
+	}
+	
+	// 접속 : 채팅방 리스트
+	@RequestMapping("/community/chatRoomList.do")
+	public String roomList(HttpSession session, Model model, @RequestParam Map<String, Object> paramMap) throws Exception {
+		
+		String loginId = (String) session.getAttribute("loginId");
+		logger.info("로그인한 사용자 아이디: " + loginId);
+		
+		// 페이지 사이징 
+		int pageSize = Integer.parseInt((String) paramMap.get("pageSize"));
+		int cPage = Integer.parseInt((String) paramMap.get("cpage"));
+		int pageIndex = (cPage - 1) * pageSize;
+		paramMap.put("pageIndex", pageIndex);
+		paramMap.put("pageSize", pageSize);
+		paramMap.put("loginId", loginId);
+		int countChatRoomList = chatService.countChatRoomList(paramMap);
+		
+		
+		// 채팅방 목록 불러오기  
+		// 조회 : 접속 아이디로 필터링된 채팅방리스트 조회 
+		List<ChatRoomList> chatRoomList = chatService.selectAllById(loginId);
+
+	    model.addAttribute("loginId",loginId);
+		model.addAttribute("chatRoomList", chatRoomList);
+		model.addAttribute(countChatRoomList);
+		
+		
+		return "community/chat/chatRoomList"; // 
 	}
 	
 	
-	//채팅방 접속 ajax
+	// 접속 : 개별 채팅방 ???? 
 	@GetMapping("/community/chatRoomNo.do")
 	public String enter (HttpSession session, @RequestParam int chatRoomNo, Model model) throws Exception {
 	   
@@ -81,35 +119,6 @@ public class StompConfig {
 	    
 	    chatService.updateMessage(requestBody);
 	    
-	    
-	    
-	    
-//	    // 응답 맵을 준비합니다.
-//	    Map<String, Object> responseMap = new HashMap<>();
-//
-//	    try {
-//	        // 클라이언트에서 전달한 chatRoomNo를 가져옵니다.
-//	        int chatRoomNo = (int) requestBody.get("chatRoomNo");
-//
-//	        // 채팅 메시지의 읽은 개수와 읽은 날짜를 업데이트합니다.
-//	        List<SocketEntity> chatContent = chatService.updateMessage(requestBody);
-//	        
-//	        if (chatContent == null) {
-//	            chatContent = new ArrayList<>();
-//	        }
-//
-//	        // 업데이트된 채팅 메시지와 사용자 정보를 응답 맵에 추가합니다.
-//	        responseMap.put("chatList", chatContent);
-//	        responseMap.put("userChatDto", userChatDto);
-//
-//	        // 응답 맵을 반환합니다.
-//	        return responseMap;
-//	    } catch (Exception e) {
-//	        e.printStackTrace();
-//	        // 필요한 경우 에러를 처리합니다.
-//	        responseMap.put("error", "채팅방에 입장하는데 실패했습니다.");
-//	        return responseMap;
-//	    }
 	    return "community/chat/chatRoom";
 	}
 
@@ -149,7 +158,7 @@ public class StompConfig {
     // 채팅 내역 조회  ajax ( 방 하나 히스토리 부르기 )
     @GetMapping("/chatHistory.do")
     @ResponseBody
-    public List<SocketEntity> getChatHistory( int chatRoomNo) throws Exception {
+    public List<SocketEntity> getChatHistory(int chatRoomNo) throws Exception {
     	
         return chatService.getChatHistory(chatRoomNo);
     }
@@ -202,7 +211,7 @@ public class StompConfig {
     @GetMapping("/asdf.do")
     public String createOrGetChatRoom1(Model model) {
     	
-    	String user = "dooly";
+    	String user = "ehunt";
         model.addAttribute("user", user);
         System.out.println("user : "+user);
         

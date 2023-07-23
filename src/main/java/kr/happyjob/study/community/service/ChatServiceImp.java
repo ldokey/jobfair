@@ -2,6 +2,7 @@ package kr.happyjob.study.community.service;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -61,22 +62,26 @@ public class ChatServiceImp implements ChatService {
 	}
 
 	
+	
+	// read - > count update 
 	@Override
 	public List<SocketEntity> updateMessage(Map<String, Object> requestBody) throws Exception {
 		
-		// 채팅방에서 넘어온 개별 객체 조립 
-		int chatRoomNo = (int) requestBody.get("chatRoomNum");
+		
+		// 객체 조립 : 채팅방에서 넘어온 개별 객체
+		int chatRoomNo = (int) requestBody.get("chatRoomNo");
 		String sender = (String) requestBody.get("name");
 		
 		
-		// db에서 불러온 채팅 객체 하나 ( 매개변수 : 채팅방번호, 채팅번호 ) -> 채팅 히스토리 전체를 불러와야함. 
-//		SocketEntity chatMsg = getChatMessageByChatNoAndChatRoomNo(chatRoomNo,chatNo);
+		// 조회 : 채팅방 하나의 대화 히스토리 전체, 매개변수 : 채팅방 번호  
 		List<SocketEntity> afterMsgs = getChatHistory(chatRoomNo);
+		
+		logger.info("과거 내역 불러오기"+afterMsgs);
 		
 		
 		// 세션에 접속한 숫자 (접속자) 
 		int participantCount = webSocketHandler.getParticipantsCount();
-		
+		logger.info("세션인원체크" + participantCount);
         
 		// 읽음 관련 분기 처리 
 		// 세션에 접속자 두개일때, 
@@ -94,10 +99,12 @@ public class ChatServiceImp implements ChatService {
         	
         	if(participantCount ==2) { // 세션 2개 일때, 
         		updateMessage.setReadCount(0);
+        		logger.info("세션 2개일 때 "+updateMessage);
     			
     		} else if(participantCount==1){ // 세션 1개 일때, 
     			if(sender.equals(updateMessage.getName())) { // 보낸사람과 db의 보낸사람이 같으면 readCount "1"로 바꾸기. 2에서 -1 처리  
     				updateMessage.setReadCount(1);
+    				logger.info("세션 1개일 때 "+updateMessage.getName());
     			} else if (!sender.equals(updateMessage.getName()) && updateMessage.getReadCount()==1 ){ // 보낸사람와 db이름이 다르고, 리드카운트가 1이면 다읽음처리 
     				updateMessage.setReadCount(0);
     				updateMessage.setReadDate(formattedDate);
@@ -109,17 +116,21 @@ public class ChatServiceImp implements ChatService {
 		return afterMsgs;
 	}
 
+	// 조회 : 방생성하거나 기존방 불러오기 
 	@Override
 	public Integer createOrGetChatRoom(String loginId, String targetUserId) throws Exception {
 		
 		logger.info("createOrGetChatRoom SV 입장 상대아이디 : " + targetUserId);
 		logger.info("createOrGetChatRoom SV 입장 내 아이디 : " + loginId);
 		
-		//기존 방번호 출력 
-		Integer existingChatRoomNo = chatDao.createOrGetChatRoom(loginId,targetUserId);
+		Map<String, String> paramMap = new HashMap<>();
+		paramMap.put("loginId", loginId);
+		paramMap.put("targetUserId", targetUserId);
+		
+		//기존 방번호 출력  
+		Integer existingChatRoomNo = chatDao.createOrGetChatRoom(paramMap);
 		
 		// loginId,targetUserId
-		
 		logger.info(" 기존 방 번호 출력  existingChatRoomNo: "+ existingChatRoomNo);
 		
 		// 기존 방 번호 null 값 받을 수 있게 변동 
@@ -139,7 +150,8 @@ public class ChatServiceImp implements ChatService {
 			return newChatRoom;
 		}
 	}
-
+	
+	// 기존 채팅방이 없다면, 채팅방 생성하기 
 	@Override
 	public int createChatRoom(String loginId, String targetUserId) throws Exception {
 		
@@ -154,7 +166,8 @@ public class ChatServiceImp implements ChatService {
 		ChatRoomList newChatRoom = new ChatRoomList();
 		
 		// 채팅방 조립 - 제목 / 생성시간 
-		String chatTitle = loginId + "님으로 부터 온" +targetUserId + "님의 대화방";
+		String chatTitle = loginId + " 님과 " +targetUserId + "님의 대화방";
+		newChatRoom.setIsDelete(2);
 		newChatRoom.setChatTitle(chatTitle);
 		newChatRoom.setRegDate(now.getFormattedDate());
 		
@@ -167,7 +180,7 @@ public class ChatServiceImp implements ChatService {
 		int maxChatRoomNo = chatDao.selectMaxChatRoomNo();
 		logger.info(" 새로운 채팅 방 번호   : " +newChatRoom);
 		
-		// 새로운 메시지 하나 추가하기 
+		// 새로운 메시지 두개 추가하기 (받는사람, 보내는 사람에 강제 메시지 부여= sender/receiver가 loginId로 통일됨 ) 
 		// 객체생성 및 조립 
 	
 		logger.info(loginId);
@@ -176,8 +189,8 @@ public class ChatServiceImp implements ChatService {
 		
 		SocketEntity newMsg = new SocketEntity();
 		newMsg.setChatRoomNo(maxChatRoomNo);
-		newMsg.setName(loginId); // 작성자 loginId, 칼럼이 하나이기에, 2명의 참여자를 기록하기 위해 상대방 자료를 입력 
-		newMsg.setMsg(targetUserId+"님의 채팅방에 오신 걸 환영합니다");
+		newMsg.setName(targetUserId); // 작성자 loginId, 칼럼이 하나이기에, 2명의 참여자를 기록하기 위해 상대방 자료를 입력 
+		newMsg.setMsg(targetUserId + loginId + "의 대화방");
 		newMsg.setReadCount(2);
 		newMsg.setRegDate(now.getFormattedDate());
 		
@@ -185,12 +198,15 @@ public class ChatServiceImp implements ChatService {
 		
 		logger.info(" 새로운 대화 객체 생성 완료 내용 : " + newMsg.getName() + saveId);
 		
-		// 업데이트해보자 
-		newMsg.setName(targetUserId);
-		int updateId = updateId(newMsg);
-		
-		logger.info(" 새로운 대화 객체 생성 아이디변경  : " + newMsg.getName() + updateId);
-		
+		newMsg.setChatRoomNo(maxChatRoomNo);
+		newMsg.setName(loginId); // 작성자 loginId, 칼럼이 하나이기에, 2명의 참여자를 기록하기 위해 상대방 자료를 입력 
+		newMsg.setMsg(loginId+"님이 입장했습니다.");
+		newMsg.setReadCount(2);
+		newMsg.setRegDate(now.getFormattedDate());
+
+		save(newMsg);
+
+		logger.info(" 새로운 대화 객체 생성 완료 내용 : " + newMsg.getName() + saveId);
 		
 		return maxChatRoomNo;
 	}
@@ -219,5 +235,18 @@ public class ChatServiceImp implements ChatService {
 	@Override
 	public int updateId(SocketEntity newMsg) {
 		return chatDao.updateID(newMsg);
+	}
+
+	@Override
+	public List<ChatRoomList> selectAllById(String loginId) throws Exception {
+	    return chatDao.selectAllById(loginId);
+	}
+
+
+	// 채팅방 개수 
+	@Override
+	public int countChatRoomList(Map<String, Object> paramMap) throws Exception {
+		
+		return chatDao.countChatRoomList(paramMap);
 	}
 }
