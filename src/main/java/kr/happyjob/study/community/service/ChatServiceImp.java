@@ -239,6 +239,7 @@ public class ChatServiceImp implements ChatService {
 
 	@Override
 	public List<ChatRoomList> selectAllById(String loginId) throws Exception {
+		logger.info("sv접속 "+loginId);
 	    return chatDao.selectAllById(loginId);
 	}
 

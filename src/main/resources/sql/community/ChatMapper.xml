@@ -45,7 +45,7 @@
 	           cr.reg_date as regDate, 
 	           cr.is_delete as isDelete,
 	           cr.update_date as updateDate 
-	    FROM tb_chatRoom cr
+	    FROM tb_chatroom cr
 	    JOIN tb_chat c ON cr.chatroom_no = c.chatroom_no
 	    WHERE c.loginID = #{loginId} AND cr.is_delete = 2
 	    ORDER BY cr.reg_date DESC;
@@ -94,7 +94,7 @@
                c.chat_count AS readCount,
                c.read_date AS readDate
         FROM tb_chat c
-        INNER JOIN tb_chatRoom r ON c.chatroom_no = r.chatroom_no
+        INNER JOIN tb_chatroom r ON c.chatroom_no = r.chatroom_no
         WHERE c.chatroom_no = #{chatRoomNo}
           AND c.chat_no = #{chatNo}
 	
@@ -122,7 +122,7 @@
 	<select id="createOrGetChatRoom" resultType="integer">
 	  	SELECT DISTINCT c.chatroom_no 
 		FROM tb_chat c
-		JOIN tb_chatRoom cr ON c.chatroom_no = cr.chatroom_no
+		JOIN tb_chatroom cr ON c.chatroom_no = cr.chatroom_no
 		WHERE c.loginID = #{loginId}
 		AND c.chatroom_no IN (
 		    SELECT chatroom_no
@@ -155,7 +155,7 @@
 	<!-- 조회 : 새로 생긴 채팅 방 max 번호   -->
 	<select id="selectMaxChatRoomNo" resultType="int" >
 		SELECT MAX(chatroom_no) as chatRoomNo
-		FROM tb_chatRoom
+		FROM tb_chatroom
 	</select>
 	
 	<!-- 수정 : 아이디 업데이트  -->

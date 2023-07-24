@@ -63,6 +63,7 @@ public class StompConfig {
 		
 		logger.info("로그인한 사용자 아이디>>>>: " + loginId);
 		List<ChatRoomList> chatRoomList = chatService.selectAllById(loginId);
+		logger.info(chatRoomList);
 
 	    model.addAttribute("loginId",loginId);
 		model.addAttribute("chatRoomList", chatRoomList);
@@ -125,34 +126,6 @@ public class StompConfig {
 	
 	
 	
-	
-	
-//	 // 채팅방에 입장 !  
-//    @PostMapping("/community/chatRoomNo.do")
-//    @ResponseBody
-//    public Map<String, Object>  room (Model model, HttpSession session, @RequestParam Map<String, Object> requestBody) throws Exception {
-//    	
-//    	// 세션에서 로그인 아이디 삽입 
-//    	String userId = (String) session.getAttribute("loginId");
-//    	logger.info("login ID===>"+userId);
-//    	
-//    	ChatUserDto userChatDto = new ChatUserDto();
-//    	userChatDto.setName(userId);
-//    
-//    	// 서비스 처리 - count 감소  
-//    	List<SocketEntity> chatList = chatService.updateMessage(requestBody);
-//    	
-//    	int chatRoomNo = Integer.parseInt(requestBody.get("chatRoomNo").toString());
-//	    model.addAttribute("chatRoomNo", chatRoomNo);
-//
-//		Map<String, Object> returnMap = new HashMap<String, Object>();
-//		returnMap.put("chatList", chatList);
-//		returnMap.put("userChatDto", userChatDto);
-//		
-//
-//    	return returnMap;
-//    }
-//    
     
     
     // 채팅 내역 조회  ajax ( 방 하나 히스토리 부르기 )
@@ -243,6 +216,18 @@ public class StompConfig {
 //    	}
     	return ResponseEntity.ok(chatRoomNo);
     }
+    
+//    // 채팅방 나가기 
+//	@RequestMapping("deleteChat.do")
+//	@ResponseBody
+//	public Map<String, Object> deleteChat(Model model, @RequestParam Map<String, Object> paramMap,
+//			HttpServletRequest request, HttpServletResponse response, HttpSession session) throws Exception {
+//		
+//		logger.info("   - paramMap : " + paramMap);
+//		
+//		
+//		return returnMap;
+//	}
     
     
 }
