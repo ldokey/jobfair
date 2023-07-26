@@ -48,175 +48,66 @@
 			
         </head>
 
-        <body>
-            
-                <input type="hidden" name="action" id="action" value=""> <input type="hidden" name="loginId"
-                    id="loginId" value="${loginId}">
-                <input type="hidden" name="userNm" id="userNm" value="${userNm}">
-                <input type="hidden" name="noticeno" id="noticeno" value=""> <input type="hidden" name="currentpage"
-                    id="currentpage" value="">
-                <input type="hidden" name="filecd" id="filecd" value="">
 
-                <!-- 모달 배경 -->
-                <div id="mask"></div>
-
-                <div id="wrap_area">
-
-                    <h2 class="hidden">header 영역</h2>
-                    <jsp:include page="/WEB-INF/view/common/header.jsp"></jsp:include>
-
-                    <h2 class="hidden">컨텐츠 영역</h2>
-                    <div id="container">
-                        <ul>
-                            <li class="lnb">
-                                <!-- lnb 영역 -->
-                                <jsp:include page="/WEB-INF/view/common/lnbMenu.jsp"></jsp:include>
-                                <!--// lnb 영역 -->
-                            </li>
-                            <li class="contents">
-                                <!-- contents -->
-                                <h3 class="hidden">contents 영역</h3> <!-- content -->
-                                <div class="content">
-
-                                    <p class="Location">
-                                        <a href="../dashboard/dashboard.do" class="btn_set home">메인으로</a>
-                                        <span class="btn_nav bold">실습</span> <span class="btn_nav bold">공지사항
-                                            관리</span> <a href="../system/notice.do" class="btn_set refresh">새로고침</a>
-                                    </p>
-                                    <p class="conTitle">
-                                        <span class="btn_nav bold">채팅방 리스트</span>
-                                    </p>
-
-
-                                    
-                                    
-                                    
-                                    <div class="divComGrpCodList">
-                                        <table class="col">
-                                            <caption>caption</caption>
-                                            <colgroup>
-                                                <col width="6%">
-                                                <col width="40%">
-                                                <col width="17%">
-                                                <col width="20%">
-                                                <col width="6%">
-                                            </colgroup>
-                                            <thead>
-                                                <tr>
-                                                    <th scope="col">채팅번호</th>
-                                                    <th scope="col">채팅방 제목</th>
-                                                    <th scope="col">채팅방 일자</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="chatRoomList">
-                                            
-												<c:forEach items="${chatRoomList}" var="list">
-													<c:if test="${list.isDelete eq 2}">
-														<tr>
-															<td>${list.chatRoomNo}</td>
-															<td><a href="javascript:openPop(${list.chatRoomNo})">${list.chatTitle}</a></td>
-															<td>${list.regDate}</td>
-														</tr>
-													</c:if>
-												</c:forEach>
-                                            
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    
-                                    
-                                    
-                                    
-                                    <div class="paging_area" id="noticePagination"></div>
-                                    
-                                    				<label for="userId">회원 아이디:</label>
-													<input type="text" id="userId" required>
-													<button type="button" id="submitBtn">채팅방 열기</button>
-
-                                    
-                                </div>
-                                <!--// content -->
-
-                                <h3 class="hidden">풋터 영역</h3>
-                                <jsp:include page="/WEB-INF/view/common/footer.jsp"></jsp:include>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-
-
-
-                <div id="chatModal" class="layerPop layerType2" style="width: 600px;">
-                    <dl>
-                        <dt>
-                            <strong>채팅방 내용 </strong>
-                        </dt>
-                        <dd class="content">
-                            <!-- s : 여기에 내용입력 -->
-                            <table class="row">
-                                <caption>caption</caption>
-                                <colgroup>
-                                    <col width="120px">
-                                    <col width="*">
-                                    <col width="120px">
-                                    <col width="*">
-                                </colgroup>
-
-<!--  채팅방 내용 								/ -->
-                                <tbody>
-										                                    
-                          				
-										<div class="card">
-                                            <div class="card-header">채팅방! ${loginId}님 어서오세요</div>
-                                            	<div class="card-body">
-                                                	<div>
-                                                    	<div id="target" class="chatWindow"
-                                                        style="height: 400px; overflow-y: scroll;"></div>
-                                                   		 <div class="d-flex justify-content-between" style="height: 45px;">
-                                                        <input id="text" type="text" style="width: 77%" />
-                                                        <button style="width: 20%" onclick="send();"
-                                                            class="btn btn-success btn-sm">전송</button>
-                                                        <input type="hidden" id="name" value="${loginId}">
-                                                    	</div>
-                                                	</div>
-                                           	 </div>
-                                       	 </div>	
-                                       	 
-
-
-                                </tbody>
-                            </table>
-
-							
-
-
-                            <!-- e : 여기에 내용입력 -->
-
-                            <div class="btn_areaC mt30">
-                                <a href="" class="btnType blue" id="btnDelete" name="btn"><span>나가기</span></a>
-                                <a href="" class="btnType gray" id="btnClose" name="btn"><span>닫기</span></a>
-                            </div>
-                        </dd>
-                    </dl>
-                    <a href="" class="closePop"><span class="hidden">닫기</span></a>
-                </div>
-
-
-            
-            
-            
-            <script>
+       <script>
 			         
             // 페이징 설정 
             var pageSize = 10;
             var pageBlockSize = 5;
  
             
+            // 제이쿼리 실행 장소 
             $(function () {
                 buttonClickEvent();
                 var roomNum; // 방번호 임시 
+                listView();
                 
+                // 새로운 메시지 발송하기 
+                $("#submitBtn").on("click", function(){
+               	 console.log("createChatButton 입장");
+               	 var targetUserId = $("#userId").val();
+                   createOrGetChatRoom(targetUserId);
+                   console.log("targetUserId: "+ targetUserId);
+               })
             });
+            
+            // List 붙이기 
+		    function listView(cpage){
+		    var cpage = cpage || 1;
+            console.log(cpage);
+		    var param = {
+		        pageSize : pageSize,
+		        cpage: cpage
+		    };
+		    console.log("param"+param.pageSize, param.cpage);
+		
+		    $.ajax({
+		        type: "post",
+		        url: "/community/chatRoomList.do",
+		        data: param,
+		        success:listCallBack,
+		        error: function(error) {
+		            alert("리스트 불러오기 실패");
+		        }
+			    });
+			}
+            
+			// 채팅 방 불러오기 
+            function listCallBack(res){
+            	console.log(res);
+            	$('#chatRoomList').empty();
+         		var testHtml;
+            	$.each(res, function(idx, obj){
+            		testHtml += "<tr>";
+            		testHtml += "<td>" + obj.chatRoomNo + "</td>";
+           			testHtml += "<td><a href='javascript:openPop("+obj.chatRoomNo+")'>"+obj.chatTitle+"</a></td>";
+           			testHtml += "<td>" + obj.regDate+ "</td>";
+           			testHtml += "</tr>";
+            	});
+            	$('#chatRoomList').append(testHtml);
+            }	
+            
+            
             
             // 변수 : 채팅 임시 저장  
             var chatHtml = "";
@@ -230,13 +121,13 @@
                     var btnId = $(this).attr("id");
 
                     switch (btnId) {
-                        case "btnSend":
-                            send();
-                            break;
+                    	// 버튼 이벤트 : 채팅방 나가기 
                         case "btnDelete":
-                            $("#action").val("D");
-                            savefile();
+                            deleteChatRoom(roomNum);
+                            gfCloseModal();
+                            listView();
                             break;
+                        // 버튼 이벤트 : 채팅방 닫기  
                         case "btnClose":
                             gfCloseModal();
                             break;
@@ -263,7 +154,7 @@
             };
             
 	
-			
+			// 모달 창 띄우기  
             function gfModalPop1(id) {
 
                 //var id = $(this).attr('href');
@@ -355,7 +246,8 @@
 
                         var count = data.readCount;
                         // 메시지 읽음을 서버에 전달 
-                        sendReadCount(data.chatNo);
+                         sendReadCount(roomNum);
+                        
                         // 채팅 출력 위치 - 상대방 좌측 정렬  
                         if (data.name != '${loginId}') {
 
@@ -376,7 +268,8 @@
                         } else {
                             // 채팅 출력 위치 - 본인 우측 정렬 
                             chatHtml = '<div class="chatchat" style="justify-content:flex-end; margin-right:5px;">';
-                            /* chatHtml += '<p style="font-size: 12px; color: #999; margin-right: 10px; padding-top: 6px;">&lt; ' + count + ' &gt;</p>'; */
+                            /* chatHtml += '<p style="font-size: 12px; color: #9
+                            99; margin-right: 10px; padding-top: 6px;">&lt; ' + count + ' &gt;</p>'; */
                             chatHtml += '<p style="font-size: 12px; color: #999; margin-right: 10px; padding-top: 6px;">&lt; ' + formattedDate + ' &gt;</p>';
                             chatHtml += '<div style="display:flex; flex-direction:column;">';
                             chatHtml += '<p>' + sender + ' : </p>';
@@ -387,24 +280,24 @@
                         }
                         // 전송 버튼 누른 후, 채팅 입력칸 벨류 초기화
                         $('#text').val("");
+                        
+                           stompClient.subscribe('/topic/sessionNumbers', function (number) {
+                           console.log(number);
+                         
+                        
                         scrollToBottom();
                     });
                 });
             }
          
-            // 엔터로 전송버튼 설정하기 
-            $(window).on('keydown', function (e) {
-                if (e.keyCode == 13) { // 키보드 배열 중, 13번은 엔터키. 이 e가 발생되면, 
-                    send();
-                }
-                ;
-            })
+
          
     		  //send () 설정하기 
            function send() {
                var name = $('#name').val();
                var text = $('#text').val();
                var time = getCurrentTime();
+
 			
 
 			//분기 조건을 통해 null값의 메시지 전송 방지. 채팅에 빈 값일 경우, 조기에 return 처리.   
@@ -446,7 +339,8 @@
 				}
 			})
 		}
-    		
+    	
+            
          // 원하는 형식으로 날짜 정보 가져오기
          function getCurrentTime() {
              var currentTime = new Date();
@@ -460,19 +354,21 @@
              return formattedDate;
          }
 		
+         
          // 새로운 채팅 입력시, 스크롤 맨 아래로 이동   
          function scrollToBottom() {
              var chatWindow = $('#target');
              chatWindow.scrollTop(chatWindow.prop("scrollHeight"));
          }
 	
-         // 메시지 읽음 
-         function sendReadCount(chatNo) {
+         
+         // 메시지 읽음 처리  
+         function sendReadCount(roomNum) {
              $.ajax({
                  type: "POST",
-                 url: "/chat/read",
-                 data: JSON.stringify({ chatNo: chatNo }),
-                 contentType: "application/json",
+                 url: "/chat/read.do",
+                 data: JSON.stringify({ chatNo: roomNum }), // JSON 형태로 전송
+                 contentType: "application/json", // 요청 데이터 타입 지정
                  success: function (response) {
                      console.log("read done");
                  },
@@ -483,15 +379,8 @@
          }
          
          
-         // 새로운 메시지 발송하기 
-         
-         $("#submitBtn").on("click", function(){
-        	 console.log("createChatButton 입장");
-        	 var targetUserId = $("#userId").val();
-            createOrGetChatRoom(targetUserId);
-            console.log("targetUserId: "+ targetUserId);
-        })	
-         
+
+         // 방 생성 또는 기존 방 불러오기 
          function createOrGetChatRoom(targetUserId) {
             $.ajax({
                 type: "POST",
@@ -509,8 +398,190 @@
                 }
             });
         }
-            
+         
+         // 방 지우기 
+         function deleteChatRoom(roomNum){
+         $.ajax({
+        	 type:"post",
+        	 url : "/deleteChat.do", 
+        	 contentType: "application/json",
+        	 data: JSON.stringify({ chatRoomNo: roomNum }), 
+        	 success : listView, 
+        	 error : function(error){
+        		 alert("나가기 실패1")
+        	 }
+         })
+         }
+         
+         // 키설정 : 엔터 - 전송버튼 / 채팅 전송에서만 작동하게   
+         $(window).on('keydown', function (e) {
+             if (e.keyCode == 13) { // 키보드 배열 중, 13번은 엔터키. 이 e가 발생되면, 
+                 if($(e.target).attr("id")==="text"){send();
+                 }
+             }
+             ;
+         })
             </script>
+
+
+
+
+        <body>
+            
+                <input type="hidden" name="action" id="action" value=""> <input type="hidden" name="loginId"
+                    id="loginId" value="${loginId}">
+                <input type="hidden" name="userNm" id="userNm" value="${userNm}">
+                <input type="hidden" name="noticeno" id="noticeno" value=""> <input type="hidden" name="currentpage"
+                    id="currentpage" value="">
+                <input type="hidden" name="filecd" id="filecd" value="">
+
+                <!-- 모달 배경 -->
+                <div id="mask"></div>
+
+                <div id="wrap_area">
+
+                    <h2 class="hidden">header 영역</h2>
+                    <jsp:include page="/WEB-INF/view/common/header.jsp"></jsp:include>
+
+                    <h2 class="hidden">컨텐츠 영역</h2>
+                    <div id="container">
+                        <ul>
+                            <li class="lnb">
+                                <!-- lnb 영역 -->
+                                <jsp:include page="/WEB-INF/view/common/lnbMenu.jsp"></jsp:include>
+                                <!--// lnb 영역 -->
+                            </li>
+                            <li class="contents">
+                                <!-- contents -->
+                                <h3 class="hidden">contents 영역</h3> <!-- content -->
+                                <div class="content">
+
+                                    <p class="Location">
+                                        <a href="../dashboard/dashboard.do" class="btn_set home">메인으로</a>
+                                        <span class="btn_nav bold">실습</span> <span class="btn_nav bold">공지사항
+                                            관리</span> <a href="../system/notice.do" class="btn_set refresh">새로고침</a>
+                                    </p>
+                                    <p class="conTitle">
+                                        <span class="btn_nav bold">채팅방 리스트</span>
+                                    </p>
+
+
+                                    
+                                    
+                                    
+                                    <div class="divComGrpCodList">
+                                        <table class="col">
+                                            <caption>caption</caption>
+                                            <colgroup>
+                                                <col width="6%">
+                                                <col width="40%">
+                                                <col width="17%">
+                                                <col width="20%">
+                                                <col width="6%">
+                                            </colgroup>
+                                            <thead>
+                                                <tr>
+                                                    <th scope="col">채팅번호</th>
+                                                    <th scope="col">채팅방 제목</th>
+                                                    <th scope="col">채팅방 일자</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="chatRoomList">
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    
+                                    
+                                    
+                                    
+                                    <div class="paging_area" id="noticePagination"></div>
+                                    
+                                    				<label for="userId">회원 아이디:</label>
+													<input type="text" id="userId" required>
+													<button type="button" id="submitBtn">채팅방 열기</button>
+
+                                    
+                                </div>
+                                <!--// content -->
+
+                                <h3 class="hidden">풋터 영역</h3>
+                                <jsp:include page="/WEB-INF/view/common/footer.jsp"></jsp:include>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+
+
+                <div id="chatModal" class="layerPop layerType2" style="width: 600px;">
+                    <dl>
+                        <dt>
+                            <strong>채팅방 내용 </strong>
+                        </dt>
+                        <dd class="content">
+                            <!-- s : 여기에 내용입력 -->
+                            <table class="row">
+                                <caption>caption</caption>
+                                <colgroup>
+                                    <col width="120px">
+                                    <col width="*">
+                                    <col width="120px">
+                                    <col width="*">
+                                </colgroup>
+
+<!--  채팅방 내용 								/ -->
+                                <tbody>
+										                                    
+                          				
+										<div class="card">
+                                            <div class="card-header">채팅방! ${loginId}님 어서오세요</div>
+                                            	<div class="card-body">
+                                                	<div>
+                                                    	<div id="target" class="chatWindow"
+                                                        style="height: 400px; overflow-y: scroll;"></div>
+                                                   		 <div class="d-flex justify-content-between" style="height: 45px;">
+                                                        <input id="text" type="text" style="width: 77%" />
+                                                        <button style="width: 20%" onclick="send();"
+                                                            class="btn btn-success btn-sm">전송</button>
+                                                        <input type="hidden" id="name" value="${loginId}">
+                                                    	</div>
+                                                	</div>
+                                           	 </div>
+                                       	 </div>	
+                                       	 
+
+
+                                </tbody>
+                            </table>
+
+							
+
+
+                            <!-- e : 여기에 내용입력 -->
+
+                            <div class="btn_areaC mt30">
+                                <a href="" class="btnType blue" id="btnDelete" name="btn"><span> 채팅방삭제</span></a>
+                            </div>
+                        </dd>
+                    </dl>
+                    <a href="" class="closePop"><span class="hidden">닫기</span></a>
+                </div>
+
+
+            
+            
+            
+     
             
         </body>
 

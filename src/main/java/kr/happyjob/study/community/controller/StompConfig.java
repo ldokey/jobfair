@@ -4,6 +4,7 @@ package kr.happyjob.study.community.controller;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -11,10 +12,12 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,15 +31,17 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import kr.happyjob.study.community.model.ChatRoomList;
 import kr.happyjob.study.community.model.SocketEntity;
 import kr.happyjob.study.community.service.ChatService;
-import lombok.RequiredArgsConstructor;
 
 @Controller
-@RequiredArgsConstructor
 public class StompConfig {
 	
 	// 기본설정 : 의존성 주입 
-	private final ChatService chatService;
+	@Autowired
+	ChatService chatService;
 
+	
+
+	
 	
 	// 기본설정 : 로거 설정 
 	private final Logger logger = LogManager.getLogger(this.getClass());
@@ -46,10 +51,28 @@ public class StompConfig {
 	// 기본설정 : 메시지컨트롤러 	
 	@MessageMapping("/server/{roomId}")
 	@SendTo("/topic/{roomId}")
-	public SocketEntity server(SocketEntity socketMsg, @PathVariable String roomId) {
+	public SocketEntity server( SocketEntity socketMsg, @PathVariable String roomId) {
 		System.out.println("roomId>>>>>>>>>>>>> : "+roomId);
+		
+//		String username = principal.getName();
+//		socketMsg.setName(username);
+//		
+//		
+//		logger.info("웹소켓 principal : "+ principal.toString());
+//		logger.info("웹소켓 username : "+ username);
+		
 		return socketMsg;
 	}
+	
+	@MessageMapping("/sessionNumbers")
+	@SendTo("/topic/sessionNumbers")
+	public String getSessionNumbers() {
+		int sessionCount = 1;
+		return "{\"count\": " + sessionCount + "}";
+	}
+	
+	
+	
 	
 	// 접속 : 첫 화면 ( 아이디, 유저네임 전달 )  
 	@RequestMapping("/community/chat.do")
@@ -58,47 +81,52 @@ public class StompConfig {
 		String loginId = (String) session.getAttribute("loginId");
 		model.addAttribute("loginId",loginId);
 		model.addAttribute("userNm",(String)session.getAttribute("userNm"));
-
-		
 		
 		logger.info("로그인한 사용자 아이디>>>>: " + loginId);
-		List<ChatRoomList> chatRoomList = chatService.selectAllById(loginId);
-		logger.info(chatRoomList);
 
 	    model.addAttribute("loginId",loginId);
-		model.addAttribute("chatRoomList", chatRoomList);
 	
 		
 		return "community/chat/chat";
 	}
 	
+	
+	
+	
 	// 접속 : 채팅방 리스트
-	@RequestMapping("/community/chatRoomList.do")
-	public String roomList(HttpSession session, Model model, @RequestParam Map<String, Object> paramMap) throws Exception {
+	@PostMapping("/community/chatRoomList.do")
+	@ResponseBody
+	public List<ChatRoomList> roomList (HttpSession session, Model model, ChatRoomList chatRoomList ) throws Exception {
 		
 		String loginId = (String) session.getAttribute("loginId");
-		logger.info("로그인한 사용자 아이디: " + loginId);
-		
-		// 페이지 사이징 
-		int pageSize = Integer.parseInt((String) paramMap.get("pageSize"));
-		int cPage = Integer.parseInt((String) paramMap.get("cpage"));
-		int pageIndex = (cPage - 1) * pageSize;
-		paramMap.put("pageIndex", pageIndex);
-		paramMap.put("pageSize", pageSize);
-		paramMap.put("loginId", loginId);
-		int countChatRoomList = chatService.countChatRoomList(paramMap);
-		
+		logger.info("로그인한 사용자 아이디 chatRoomList : " + loginId);
+		logger.info(chatRoomList.getCpage());
+//		logger.info(paramMap);
+//		
+//		// 페이지 사이징 
+//		int pageSize = Integer.parseInt((String) paramMap.get("pageSize"));
+//		int cPage = Integer.parseInt((String) paramMap.get("cpage"));
+		int pageIndex = (chatRoomList.getCpage() - 1) * chatRoomList.getPageSize(); // 시작 번호 
+		chatRoomList.setCpage(pageIndex);
+		chatRoomList.setLoginId(loginId);
+//		paramMap.put("pageIndex", pageIndex);
+//		paramMap.put("pageSize", pageSize);
+//		paramMap.put("loginId", loginId);
+//		int countChatRoomList = chatService.countChatRoomList(paramMap);
+		List<ChatRoomList> chatList = chatService.selectAllById(chatRoomList);
+		logger.info(chatList);
+//		
 		
 		// 채팅방 목록 불러오기  
 		// 조회 : 접속 아이디로 필터링된 채팅방리스트 조회 
-		List<ChatRoomList> chatRoomList = chatService.selectAllById(loginId);
 
-	    model.addAttribute("loginId",loginId);
-		model.addAttribute("chatRoomList", chatRoomList);
-		model.addAttribute(countChatRoomList);
+//	    model.addAttribute("loginId",loginId);
+//		model.addAttribute("chatRoomList", chatRoomList);
+//		model.addAttribute(countChatRoomList);
 		
 		
-		return "community/chat/chatRoomList"; // 
+		return chatList; // 
+//		return "community/chat/chatRoomList"; // 
 	}
 	
 	
@@ -166,17 +194,24 @@ public class StompConfig {
     // 0이 될 때, 날짜 입력해 읽은 날짜 기능 추가 
     @PostMapping("/chat/read.do")
     @ResponseBody
-    public ResponseEntity<String> markMessageAsRead(@RequestParam("chatRoomNo") int chatRoomNo, HttpSession session) {
+    public List<SocketEntity> markMessageAsRead(@RequestBody Map<String, Object> requestBody, HttpSession session) throws Exception {
+       
+    	 int chatNo = (int) requestBody.get("chatNo");
+    	logger.info("컨트롤러 채팅방 번호"+ chatNo);
+    	// paramMap 객체 조립 
+    	// 접속 아이디 불러오기 + 채팅방 번호 불러오기 
+    	String loginId = (String) session.getAttribute("loginId");
+    	int chatRoomNo = chatService.selectChatRoom(chatNo);
     	
-    	try {
-    		// 채팅 업데이트하기 
-//    		chatService.updateMessage(chatRoomNo, userId);
-    		return ResponseEntity.ok("메시지 읽음 처리 완료");
-    		
-    	} catch (Exception e) {
-    		e.printStackTrace();
-    		return ResponseEntity.ok("메시지 읽음 처리 실패");
-    	}
+    	// 서비스로 보낼 paramMap
+    	Map<String, Object> paramMap = new HashMap<>();
+    	paramMap.put("loginId", loginId);
+    	paramMap.put("chatRoomNo", chatRoomNo);
+    	
+    	
+		// 채팅 업데이트하기 
+		List <SocketEntity> markedMessage = chatService.updateMessage(paramMap);
+		return markedMessage;
     }
     
     
@@ -208,26 +243,27 @@ public class StompConfig {
     	
     	logger.info("생성완료  : 생성된 번호 및  아이디 "+ chatRoomNo + targetUserId);
     	
-//    	if(existingChatRoomNo != -1) {
-//    		return ResponseEntity.ok(existingChatRoomNo);
-//    	} else {
-//    		int newChatRoomNo = chatService.creatNewChatRoom();
-//    		return ResponseEntity.ok(newChatRoomNo);
-//    	}
     	return ResponseEntity.ok(chatRoomNo);
     }
     
-//    // 채팅방 나가기 
-//	@RequestMapping("deleteChat.do")
-//	@ResponseBody
-//	public Map<String, Object> deleteChat(Model model, @RequestParam Map<String, Object> paramMap,
-//			HttpServletRequest request, HttpServletResponse response, HttpSession session) throws Exception {
-//		
-//		logger.info("   - paramMap : " + paramMap);
-//		
-//		
-//		return returnMap;
-//	}
-    
-    
+    // 채팅방 나가기 
+	@RequestMapping("/deleteChat.do")
+	@ResponseBody
+	public void deleteChat(Model model, @RequestBody Map<String, Object> requestBody,
+			HttpServletRequest request, HttpServletResponse response, HttpSession session) throws Exception {
+		
+			
+		Map<String, String> responseMap = new HashMap<>();
+    	try {
+    		int chatRoomNo = (int) requestBody.get("chatRoomNo");
+    		logger.info("   - roomNo : " + chatRoomNo);
+    		
+    		int chatRoomList = chatService.deleteChatRoom(chatRoomNo);
+    		responseMap.put("reslut","success");
+    		
+    	} catch (Exception e) {
+    		e.printStackTrace();
+    		responseMap.put("result","error");
+    	}
+    }
 }

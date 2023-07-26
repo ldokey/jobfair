@@ -1,17 +1,48 @@
 package kr.happyjob.study.community.controller;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
+import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+import kr.happyjob.study.community.dao.SessionStats;
+
 @Component
 public class WebSocketHandler extends TextWebSocketHandler {
 	private final Set<WebSocketSession> sessions = new HashSet<>();
+	
+	
+	// session 방마다 채널 설정 
+	private final Map<String, Set<WebSocketSession>> roomSessions = new HashMap<>();
+
+	// 방별 세션 값 설정 
+	public void addSessionToRoom(String roomId, WebSocketSession session) {
+		
+		roomSessions.computeIfAbsent(roomId, key-> new HashSet<>()).add(session);
+	}
+	
+	// 방별 세션 방 제거  
+	public void removeSessionFromRoom(String roomId, WebSocketSession session) {
+		Set<WebSocketSession> sessions = roomSessions.get(roomId);
+		System.out.println("세션 제거 "+sessions.toString());
+		if(sessions != null){
+			sessions.remove(session);
+		}	
+	}
+	
+	// 세션에 접속한 유저 카운트 
+	public int getConnectedUserCountInRoom(String roomId) {
+		Set<WebSocketSession> sessions = roomSessions.get(roomId);
+		System.out.println("세션 정보 "+sessions.toString());
+		return sessions !=null ? sessions.size() : 0;
+	}
 	
     // 클라이언트가 웹소켓에 접속했을 때, 해당 클라이언트의 세션을 등록
     @Override

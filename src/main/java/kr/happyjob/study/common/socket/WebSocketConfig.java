@@ -3,6 +3,7 @@ package kr.happyjob.study.common.socket;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.handler.invocation.HandlerMethodArgumentResolver;
@@ -16,8 +17,10 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketTransportRegistration;
 import org.springframework.web.socket.handler.WebSocketHandlerDecoratorFactory;
+import org.springframework.web.socket.server.standard.ServerEndpointExporter;
 
 import kr.happyjob.study.community.controller.CustomWebSocketHandlerDecorator;
+import kr.happyjob.study.community.dao.SessionStats;
 
 @Configuration
 @EnableWebSocketMessageBroker
@@ -25,6 +28,11 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer{
 	
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
+    
+    
+    
+    
+    
 
 	@Override
 	public void configureMessageBroker(MessageBrokerRegistry registry) {
@@ -40,6 +48,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer{
 		registry.addEndpoint("/chat/room").setAllowedOrigins("*").withSockJS();
 	}
 
+	
 	
 	// 웹소켓 전송 구성 설정 메소드 ( 메시지 오류 처리 및 메시지 크기 제한 )
 	@Override
@@ -91,6 +100,16 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer{
 	@Override
 	public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
 		// TODO Auto-generated method stub
-		
 	}
+	
+    @Bean
+    public SessionStats sessionStats() {
+        return new SessionStats();
+    }
+
+    @Bean
+    public ServerEndpointExporter serverEndpointExporter() {
+        return new ServerEndpointExporter();
+    }
+	
 }

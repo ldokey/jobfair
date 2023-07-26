@@ -38,8 +38,10 @@
 		order by reg_date desc
 	</select>
 	
+	
+	
 	<!-- 조회 : 채팅방 리스트 전체 ( 아이디별로 조회 ) , 정렬 : 시간 역순  selectAllById -->
-	<select id="selectAllById" resultType="kr.happyjob.study.community.model.ChatRoomList">
+	<select id="selectAllById" parameterType="kr.happyjob.study.community.model.ChatRoomList" resultType="kr.happyjob.study.community.model.ChatRoomList">
 	    SELECT DISTINCT cr.chatroom_no as chatRoomNo, 
 	           cr.chat_title as chatTitle, 
 	           cr.reg_date as regDate, 
@@ -48,12 +50,9 @@
 	    FROM tb_chatroom cr
 	    JOIN tb_chat c ON cr.chatroom_no = c.chatroom_no
 	    WHERE c.loginID = #{loginId} AND cr.is_delete = 2
-	    ORDER BY cr.reg_date DESC;
+	    ORDER BY cr.reg_date DESC 
+	    limit #{cpage}, #{pageSize}
 	</select>
-
-	
-	
-	
 	
 	
 	<!-- 조회 : 채팅 방 1개 , 매개변수 : 채팅방 번호 , 정렬 : 시간순 (빠른 게 뒤)    -->
@@ -184,6 +183,20 @@
 			and tn.reg_date <![CDATA[<=]]>
 			#{srcedate}
 		</if> 
+	</select>
+	
+	<!-- 수정 : 채팅방 삭제하기  -->
+	<update id ="deleteChatRoom" parameterType="int">
+	update tb_chatroom
+	set is_delete = 1
+	where chatroom_no = #{chatRoomNo} 
+	</update>
+	
+	<!-- 조회 : 채팅번호에 따른 채팅방 번호 불러오기  -->
+	<select id="selectChatRoom" parameterType="int" resultType="int">
+	select chatroom_no  
+	from tb_chat
+	where chat_no = #{chatNo}
 	</select>
 
 

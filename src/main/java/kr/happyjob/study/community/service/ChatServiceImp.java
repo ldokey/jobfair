@@ -9,24 +9,34 @@ import java.util.Optional;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
 import kr.happyjob.study.community.controller.WebSocketHandler;
 import kr.happyjob.study.community.dao.ChatDao;
 import kr.happyjob.study.community.model.ChatRoomList;
 import kr.happyjob.study.community.model.SocketEntity;
-import lombok.RequiredArgsConstructor;
 
-@RequiredArgsConstructor
+
 @Service
 public class ChatServiceImp implements ChatService {
 	
-	private final ChatDao chatDao;
-	private final WebSocketHandler webSocketHandler;
+	@Autowired ChatDao chatDao;
+	@Autowired WebSocketHandler webSocketHandler;
+	
+	
+
+
+	
+	// 로거 설정 
 	private final Logger logger = LogManager.getLogger(this.getClass());
 	private final String className = this.getClass().toString();
 	
+	
 
+
+	
 	@Override
 	public int save(SocketEntity chatData) throws Exception {
 
@@ -69,51 +79,64 @@ public class ChatServiceImp implements ChatService {
 		
 		
 		// 객체 조립 : 채팅방에서 넘어온 개별 객체
-		int chatRoomNo = (int) requestBody.get("chatRoomNo");
-		String sender = (String) requestBody.get("name");
+		int roomNo = (int) requestBody.get("chatRoomNo");
+		String chatRoomNo1 = Integer.toString(roomNo);
+		String sender = (String) requestBody.get("loginId");
 		
+		int participantCount = webSocketHandler.getConnectedUserCountInRoom(chatRoomNo1);
+		
+		int chatRoomNo = roomNo;
+		
+		
+		
+ 		// 날짜 설정  
+		LocalDateTime now = LocalDateTime.now();
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        String formattedDate = now.format(formatter);
+        logger.info(formattedDate);
 		
 		// 조회 : 채팅방 하나의 대화 히스토리 전체, 매개변수 : 채팅방 번호  
 		List<SocketEntity> afterMsgs = getChatHistory(chatRoomNo);
-		
 		logger.info("과거 내역 불러오기"+afterMsgs);
 		
 		
 		// 세션에 접속한 숫자 (접속자) 
-		int participantCount = webSocketHandler.getParticipantsCount();
+		
+		
 		logger.info("세션인원체크" + participantCount);
         
+		
+		if (participantCount == 0) {
+			return afterMsgs;
+			
+		} else {
+		
 		// 읽음 관련 분기 처리 
-		// 세션에 접속자 두개일때, 
-        
         for (SocketEntity updateMessage : afterMsgs) {
-        	
-    		// 날짜 설정  
-    		LocalDateTime now = LocalDateTime.now();
-    		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-            String formattedDate = now.format(formatter);
-    		
-    		// db에서 불러온 해당 카운트 
-    		int readCount = updateMessage.getReadCount();
-        	
         	
         	if(participantCount ==2) { // 세션 2개 일때, 
         		updateMessage.setReadCount(0);
+        		updateMessage.setReadDate(formattedDate);
         		logger.info("세션 2개일 때 "+updateMessage);
     			
     		} else if(participantCount==1){ // 세션 1개 일때, 
     			if(sender.equals(updateMessage.getName())) { // 보낸사람과 db의 보낸사람이 같으면 readCount "1"로 바꾸기. 2에서 -1 처리  
     				updateMessage.setReadCount(1);
+    				updateMessage.setReadDate(null);
     				logger.info("세션 1개일 때 "+updateMessage.getName());
+    				logger.info(updateMessage);
     			} else if (!sender.equals(updateMessage.getName()) && updateMessage.getReadCount()==1 ){ // 보낸사람와 db이름이 다르고, 리드카운트가 1이면 다읽음처리 
     				updateMessage.setReadCount(0);
     				updateMessage.setReadDate(formattedDate);
+    				
+    				logger.info(updateMessage);
     			}
     		}
         	chatDao.updateMessage(updateMessage);
         }
 		
 		return afterMsgs;
+		}
 	}
 
 	// 조회 : 방생성하거나 기존방 불러오기 
@@ -238,9 +261,9 @@ public class ChatServiceImp implements ChatService {
 	}
 
 	@Override
-	public List<ChatRoomList> selectAllById(String loginId) throws Exception {
-		logger.info("sv접속 "+loginId);
-	    return chatDao.selectAllById(loginId);
+	public List<ChatRoomList> selectAllById(ChatRoomList chatRoomList) throws Exception {
+		logger.info("sv접속 ");
+	    return chatDao.selectAllById(chatRoomList);
 	}
 
 
@@ -249,5 +272,16 @@ public class ChatServiceImp implements ChatService {
 	public int countChatRoomList(Map<String, Object> paramMap) throws Exception {
 		
 		return chatDao.countChatRoomList(paramMap);
+	}
+
+	@Override
+	public int deleteChatRoom(int chatRoomNo) {
+		
+		return chatDao.deleteChatRoom(chatRoomNo);
+	}
+
+	@Override
+	public int selectChatRoom(int chatNo) {
+		return chatDao.selectChatRoom(chatNo);
 	}
 }

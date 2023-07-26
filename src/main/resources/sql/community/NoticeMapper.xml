@@ -59,7 +59,7 @@
 	</select>
 
 	<!-- 상세조회 -->
-	<select id="noticedetail" resultType="kr.happyjob.study.community.model.NoticeModel">
+	<select id="noticedetail" parameterType="map"  resultType="kr.happyjob.study.community.model.NoticeModel">
 		select 
 			  tn.notice_title
 			, tn.reg_date

@@ -29,8 +29,11 @@ public interface ChatDao {
 
 	public int updateID(SocketEntity chatData);
 
-	public List<ChatRoomList> selectAllById(String loginId);
+	public List<ChatRoomList> selectAllById(ChatRoomList chatRoomList);
 
+	public int countChatRoomList(Map<String, Object> paramMap);
 
-	public int countChatRoomList(Map<String, Object> paramMap); 
+	public int deleteChatRoom(int chatRoomNo);
+
+	public int selectChatRoom(int chatNo); 
 }

@@ -21,6 +21,8 @@ public interface ChatService{
 	public int createChatRoom(String loginId, String targetUserId) throws Exception;
 	public int selectMaxChatRoomNo()throws Exception;
 	public int updateId(SocketEntity chatData)throws Exception;
-	public List<ChatRoomList> selectAllById(String loginId) throws Exception;
+	public List<ChatRoomList> selectAllById(ChatRoomList chatRoomList) throws Exception;
 	public int countChatRoomList(Map<String, Object> paramMap)throws Exception;
+	public int deleteChatRoom(int chatRoomNo);
+	public int selectChatRoom(int chatNo);
 }
